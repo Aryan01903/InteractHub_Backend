@@ -2,10 +2,6 @@ const mongoose=require("mongoose")
 
 
 const userSchema=new mongoose.Schema({
-    name : {
-        type : String,
-        required : true
-    },
     email : {
         type : String,
         lowercase : true,
@@ -13,20 +9,29 @@ const userSchema=new mongoose.Schema({
         required : true,
         unique : true
     },
-    password : {
+    passwordHash : {
         type : String,
         required : true,
-        select : false          // ensures no leakage of password
     },
     tenantId : {
-        type : String,
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'Tenant',
         required : true
     },
-    Verified : {
+    role : {
+        type : String,
+        enum : ['admin', 'member'],
+        default : 'member'
+    },
+    isVerified : {
         type : Boolean,
         default : false
+    },
+    createdAt : {
+        type : Date,
+        default : Date.now
     }
-}, { timestamps : true, versionKey : false})
+})
 
 
 module.exports=mongoose.model('User',userSchema)
