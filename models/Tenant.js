@@ -9,6 +9,11 @@ const tenantSchema=new mongoose.Schema({
     logoUrl : {
         type : String
     },
+    adminEmail : {
+        type : String,
+        required : true,
+        unique : true
+    },
     createdAt : {
         type : Date,
         default : Date.now

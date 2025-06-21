@@ -16,7 +16,7 @@ const AuditLogSchema=new mongoose.Schema({
     details : Object,
     createdAt : {
         type : Date,
-        default : date.now
+        default : Date.now
     }
 })
 
