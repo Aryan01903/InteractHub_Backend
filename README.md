@@ -25,51 +25,43 @@
   - Real-time updates using `Socket.IO`
   - Version tracking & restore capability
 
----
-
-## 📁 Project Structure
-
-CollabBoard_Backend/
-├── controllers/
-├── middlewares/
-├── models/
-├── routes/
-├── utils/
-├── .env
-├── server.js
-└── package.json
 
 ---
-
 
 ## 📡 API Endpoints
-- **🔐 Auth**
-| Method | Endpoint               | Description                 |
-| ------ | ---------------------- | --------------------------- |
-| POST   | `/api/auth/send-otp`     | Send OTP to email           |
-| POST   | `/api/auth/register` | Verify OTP, complete signup |
-| POST   | `/api/auth/login`     | Login using passwordHash    |
-| POST   | `/api/auth/accept-invite` | Accept invite + join tenant |
 
-- **🏢 Tenant**
+### 🔐 Auth
+
+| Method | Endpoint                   | Description                 |
+|--------|----------------------------|-----------------------------|
+| POST   | `/api/auth/send-otp`       | Send OTP to email           |
+| POST   | `/api/auth/register`       | Verify OTP, complete signup |
+| POST   | `/api/auth/login`          | Login using passwordHash    |
+| POST   | `/api/auth/accept-invite`  | Accept invite + join tenant |
+
+### 🏢 Tenant
+
 | Method | Endpoint              | Description                  |
-| ------ | --------------------- | ---------------------------- |
+|--------|-----------------------|------------------------------|
 | POST   | `/api/tenants/create` | Create tenant *(Admin only)* |
 
-- **📩 Invites**
+### 📩 Invites
+
 | Method | Endpoint              | Description                 |
-| ------ | --------------------- | --------------------------- |
+|--------|-----------------------|-----------------------------|
 | POST   | `/api/invites/send`   | Send invite *(Admin only)*  |
 | POST   | `/api/invites/resend` | Resend expired invite email |
 
-- **🧾 Audit Logs**
+### 🧾 Audit Logs
+
 | Method | Endpoint         | Description        |
-| ------ | ---------------- | ------------------ |
+|--------|------------------|--------------------|
 | GET    | `/api/auditLogs` | View audit history |
 
-- **🧱 Whiteboard**
+### 🧱 Whiteboard
+
 | Method | Endpoint                                        | Description                       |
-| ------ | ----------------------------------------------- | --------------------------------- |
+|--------|-------------------------------------------------|-----------------------------------|
 | POST   | `/api/whiteboard/create`                        | Create new board                  |
 | PUT    | `/api/whiteboard/update/:id`                    | Update whiteboard data            |
 | GET    | `/api/whiteboard/get`                           | List all boards (tenant-specific) |
@@ -80,16 +72,18 @@ CollabBoard_Backend/
 ---
 
 ## 🔌 Real-Time Collaboration
+
 - Clients connect to Socket.IO server
-- Emit joinBoard event with board ID
-- On drawing, emit whiteboardUpdate
+- Emit `joinBoard` event with board ID
+- On drawing, emit `whiteboardUpdate`
 - All users in same board room receive updates instantly
 
 ---
 
 ## 🛠 Tech Stack
+
 | Area     | Tech Used               |
-| -------- | ----------------------- |
+|----------|-------------------------|
 | Backend  | Express.js (Node.js)    |
 | Auth     | JWT, bcrypt, nodemailer |
 | Database | MongoDB + Mongoose      |
@@ -99,12 +93,7 @@ CollabBoard_Backend/
 ---
 
 ## 🧑‍💻 Author
-Aryan Kumar Shrivastav
+
+**Aryan Kumar Shrivastav**
 
 If you liked this project or have suggestions, feel free to ⭐ it or open a pull request!
-
-
-
-
-
-
