@@ -29,8 +29,7 @@
 
 ## 📁 Project Structure
 
-bash
-CollabBoard_Backend/
+```CollabBoard_Backend/
 ├── controllers/
 ├── middlewares/
 ├── models/
