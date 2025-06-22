@@ -26,7 +26,7 @@ const whiteboardRoutes = require('./routes/whiteboardRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tenants', tenantRoutes);
-app.use('/api/tenants', inviteRoutes); 
+app.use('/api/invites', inviteRoutes); 
 app.use('/api/auditLogs', auditLogRoutes);
 app.use('/api/whiteboard', whiteboardRoutes);
 
