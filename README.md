@@ -29,7 +29,7 @@
 
 ## 📁 Project Structure
 
-```CollabBoard_Backend/
+CollabBoard_Backend/
 ├── controllers/
 ├── middlewares/
 ├── models/
