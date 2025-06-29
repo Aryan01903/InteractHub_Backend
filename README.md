@@ -1,4 +1,4 @@
-# 🧾 CollabBoard Backend
+# 🧾 BoardStack Backend (API)
 
 **A multi-tenant SaaS backend** for a real-time whiteboard collaboration app built with the **MERN** stack.
 
