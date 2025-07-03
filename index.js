@@ -23,8 +23,7 @@ const io = new Server(server, {
   }
 });
 
-// Middlewares
-app.use(cors());
+// Middleware
 app.use(express.json());
 
 // Routes
