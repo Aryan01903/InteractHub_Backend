@@ -6,6 +6,16 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
+const corsOptions = {
+  origin: '*', // allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // handle preflight requests
+
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
