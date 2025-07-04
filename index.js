@@ -1,33 +1,46 @@
 const express = require('express');
-const app = express();
-app.use(cors(corsOptions));
-require('dotenv').config();
+const cors = require('cors');
 const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
+require('dotenv').config();
 
+const app = express();
+const server = http.createServer(app);
+
+// CORS setup FIRST
 const corsOptions = {
-  origin: '*', // allow all origins
+  origin: '*', // In production, use specific domain(s) like 'https://your-frontend.com'
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
-
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // handle preflight requests
+app.options('*', cors(corsOptions)); // For preflight requests
 
-
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: '*'
-  }
-});
-
-// Middleware
+// Parse JSON body
 app.use(express.json());
 
-// Routes
+// Set up Socket.IO with CORS
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
+
+// MongoDB connection
+mongoose.connect(process.env.DB_URL)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    server.listen(process.env.PORT, () => {
+      console.log(`Server running on port ${process.env.PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err.message);
+  });
+
+// ROUTES
 const authRoutes = require('./routes/authRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const inviteRoutes = require('./routes/inviteRoutes');
@@ -36,23 +49,12 @@ const whiteboardRoutes = require('./routes/whiteboardRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tenants', tenantRoutes);
-app.use('/api/invites', inviteRoutes); 
+app.use('/api/invites', inviteRoutes);
 app.use('/api/auditLogs', auditLogRoutes);
 app.use('/api/whiteboard', whiteboardRoutes);
 
-// MongoDB Connection
-mongoose.connect(process.env.DB_URL)
-.then(() => {
-  console.log("Connected to MongoDB");
-  server.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT}`);
-  });
-})
-.catch((err) => {
-  console.log("MongoDB Connection Error:", err);
-});
 
-// Socket.IO for real-time whiteboard
+// Socket.IO setup
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
