@@ -8,11 +8,23 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
-// CORS setup FIRST
+const allowedOrigins = [
+  'http://localhost:5173',           // Vite local dev
+  'http://localhost:3000',           // Other local port
+  'https://boardstack.onrender.com', // deployed frontend
+];
+
 const corsOptions = {
-  origin: '*', // In production, use specific domain(s) like 'https://your-frontend.com'
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true); // Allow the origin
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // For preflight requests
