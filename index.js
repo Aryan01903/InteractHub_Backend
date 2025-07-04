@@ -27,6 +27,9 @@ const corsOptions = {
   credentials: true,
 };
 app.use(cors(corsOptions));
+app.get('/test-cors', (req, res) => {
+  res.json({ ok: true });
+});
 app.options('*', cors(corsOptions)); // For preflight requests
 
 // Parse JSON body
