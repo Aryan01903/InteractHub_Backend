@@ -22,47 +22,53 @@ exports.sendOtpSignup=async(req,res)=>{
     })
 }
 
-exports.verifyOtpSignup=async(req,res)=>{
-    const {email,otp,password,tenantName,tenantId,role}=req.body;
-    const user=await User.findOne({email,tenantId})
+exports.verifyOtpSignup = async (req, res) => {
+  const { email, otp, password, tenantName, tenantId, role } = req.body;
 
-    if(!user || user.otp!==otp || user.otpExpires<Date.now()){
-        return res.json({
-            error : "Invaild or expired OTP"
-        })
+  const user = await User.findOne({ email, tenantId });
+
+  if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
+    return res.status(400).json({
+      error: "Invalid or expired OTP"
+    });
+  }
+
+  let finalTenantId = tenantId;
+
+  // if admin, create new tenant
+  if (role === 'admin') {
+    if (!tenantName) {
+      return res.status(400).json({
+        error: "Tenant name required for admin"
+      });
     }
 
-    // if admin, create new tenant
-    if(role=='admin'){
-        if(!tenantName){
-            return res.status(400).json({
-                error : "Tenant name required for admin"
-            })
-        }
-        const existing = await Tenant.findOne({name : tenantName});
-        if(existing){
-            return res.status(400).json({
-                error : "Tenant already exists"
-            })
-        }
-        const newTenant=await Tenant.create({name : tenantName})
-        finalTenantId=newTenant._id
+    const existing = await Tenant.findOne({ name: tenantName });
+    if (existing) {
+      return res.status(400).json({
+        error: "Tenant already exists"
+      });
     }
 
-    const passwordHash=await bcrypt.hash(password,8);
-    user.passwordHash=passwordHash
-    user.isVerified=true
-    user.tenantId=finalTenantId
-    user.otp=null
-    user.otpExpires=otpExpires
-    user.role=role || 'member'
+    const newTenant = await Tenant.create({ name: tenantName });
+    finalTenantId = newTenant._id;
+  }
 
-    await user.save();
+  const passwordHash = await bcrypt.hash(password, 8);
 
-    res.status(200).send({
-        message : "User Registered"
-    })
-}
+  user.passwordHash = passwordHash;
+  user.isVerified = true;
+  user.tenantId = finalTenantId; // ensure it's set for both admin & member
+  user.otp = null;
+  user.otpExpires = null;
+  user.role = role || 'member';
+
+  await user.save();
+
+  res.status(200).send({
+    message: "User Registered"
+  });
+};
 
 exports.signin=async(req,res)=>{
     const {email,password,tenantId}=req.body;
@@ -83,7 +89,7 @@ exports.signin=async(req,res)=>{
         _id : user._id,
         tenantId : user.tenantId,
         role : user.role
-    },process.env.Secret,{expiresIn : '2h'})
+    },process.env.Secret,{expiresIn : '1d'})
     res.status(200).json({
         email : user.email,
         token : token,

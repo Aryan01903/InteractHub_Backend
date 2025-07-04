@@ -11,12 +11,12 @@ const userSchema=new mongoose.Schema({
     },
     passwordHash : {
         type : String,
-        required : true,
+        required : false,
     },
     tenantId : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Tenant',
-        required : true
+        required : false
     },
     role : {
         type : String,
