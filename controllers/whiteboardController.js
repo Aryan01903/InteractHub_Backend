@@ -50,7 +50,7 @@ exports.updateWhiteboard=async(req,res)=>{
             action : 'update-whiteboard',
             details : {whiteboard : id}
         }) 
-        res.satus(200).json(board)
+        res.status(200).json(board)
     }catch(err){
         res.status(500).json({
             error : err.message
