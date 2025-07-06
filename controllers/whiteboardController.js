@@ -60,7 +60,7 @@ exports.updateWhiteboard=async(req,res)=>{
 // get all whiteboards
 exports.getWhiteboards=async(req,res)=>{
     try{
-        const boards=await Whiteboard.findOne({tenantId : req.user.tenantId});
+        const boards=await Whiteboard.find({tenantId : req.user.tenantId});
         res.status(200).json(boards)
     }catch(err){
         res.status(500).json({
