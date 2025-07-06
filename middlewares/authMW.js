@@ -8,7 +8,7 @@ module.exports=(req,res,next)=>{
         })
     }
     try{
-        req.user=jwt.verify(token,process.env.Secret)
+        req.user=jwt.verify(token,process.env.SECRET)
         next();
     }catch{
         res.status(401).json({

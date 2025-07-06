@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -8,71 +9,73 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
-
+// CORS configuration
 const corsOptions = {
-  origin: '*',
+  origin: '*', // Allow all origins for testing
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
 app.use(cors(corsOptions));
-app.get('/test-cors', (req, res) => {
-  res.json({ ok: true });
-});
-app.options('*', cors(corsOptions)); // For preflight requests
-
+app.options('*', cors(corsOptions));
 
 // Parse JSON body
 app.use(express.json());
 
-// Set up Socket.IO with CORS
+// Test endpoint
+app.get('/test-cors', (req, res)=> {
+  res.json({ ok: true });
+});
+
+// Routes
+const authRoutes = require('./routes/authRoutes');
+const tenantRoutes = require('./routes/tenantRoutes');
+const inviteRoutes = require('./routes/inviteRoutes');
+const auditRoutes = require('./routes/auditLogRoutes');
+const whiteboardRoutes = require('./routes/whiteboardRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/tenants', tenantRoutes);
+app.use('/api/invites', inviteRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/whiteboard', whiteboardRoutes);
+
+// Error-handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.message);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: '*', // Allow all origins for Socket.IO
     methods: ['GET', 'POST'],
   },
+});
+
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+  socket.on('joinBoard', (boardId) => {
+    socket.join(boardId);
+    console.log(`Client ${socket.id} joined board ${boardId}`);
+  });
+  socket.on('whiteboardUpdate', ({ boardId, data }) => {
+    socket.to(boardId).emit('whiteboardUpdate', data);
+  });
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
 });
 
 // MongoDB connection
 mongoose.connect(process.env.DB_URL)
   .then(() => {
     console.log('Connected to MongoDB');
-    server.listen(process.env.PORT, () => {
-      console.log(`Server running on port ${process.env.PORT}`);
+    server.listen(process.env.PORT || 5000, () => {
+      console.log(`Server running on port ${process.env.PORT || 5000}`);
     });
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err.message);
   });
-
-// ROUTES
-const authRoutes = require('./routes/authRoutes');
-const tenantRoutes = require('./routes/tenantRoutes');
-const inviteRoutes = require('./routes/inviteRoutes');
-const auditLogRoutes = require('./routes/auditLogRoutes');
-const whiteboardRoutes = require('./routes/whiteboardRoutes');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/tenants', tenantRoutes);
-app.use('/api/invites', inviteRoutes);
-app.use('/api/auditLogs', auditLogRoutes);
-app.use('/api/whiteboard', whiteboardRoutes);
-
-
-// Socket.IO setup
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
-
-  socket.on('joinBoard', (boardId) => {
-    socket.join(boardId);
-    console.log(`Client ${socket.id} joined board ${boardId}`);
-  });
-
-  socket.on('whiteboardUpdate', ({ boardId, data }) => {
-    socket.to(boardId).emit('whiteboardUpdate', data);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});

@@ -39,5 +39,4 @@ const inviteSchema=new mongoose.Schema({
     }
 })
 
-
-module.exports=new mongoose.model('Invite',inviteSchema)
+module.exports = mongoose.models.Invite || mongoose.model('Invite', inviteSchema);

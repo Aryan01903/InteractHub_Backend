@@ -9,10 +9,14 @@ const transporter  =  nodemailer.createTransport({
 })
 
 module.exports=async function sendOTP(email,otp){
-    await transporter.sendMail({
+    try{
+        await transporter.sendMail({
         from : process.env.MAIL_USER,
         to : email,
-        subject : 'Your OTP for CollabBoard',
-        text : `Your OTP is ${otp}. It will expire in 5 minutes`
-    })
+        subject : 'Your OTP for BoardStack',
+        text : `Your OTP is ${otp}. It will expire in 5 minutes\n\nThanks,\nBoardStack Team`
+        })
+    }catch(err){
+        console.log("Error Occured",err.message)
+    }
 }
