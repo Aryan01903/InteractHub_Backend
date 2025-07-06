@@ -10,7 +10,7 @@ const transpoter=nodemailer.createTransport({
 })
 
 exports.sendInviteEmail=async(email,token,tenantId)=>{
-    const link = `https://yourapp.com/signup?token=${token}&tenantId=${tenantId}`;
+    const link = `https://boardstack-pi.vercel.app/send-otp?token=${token}&tenantId=${tenantId}`;
 
     try{
         await transpoter.sendMail({
