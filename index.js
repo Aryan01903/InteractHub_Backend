@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://boardstack-pi.vercel.app/',
+  origin: 'https://boardstack-pi.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
