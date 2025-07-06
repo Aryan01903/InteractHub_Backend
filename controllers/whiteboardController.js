@@ -9,7 +9,7 @@ exports.createWhiteboard=async(req,res)=>{
         const whiteboard=await Whiteboard.create({
             name,
             data,
-            tenatId,
+            tenantId,
             createdBy : userId
         })
         await createAuditLog({
