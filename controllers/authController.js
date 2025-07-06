@@ -1,6 +1,6 @@
 const User = require('../models/user.model');
 const Tenant = require('../models/Tenant');
-const Invite = require('../models/Invite'); // Needed for acceptInvite
+const Invite = require('../models/invite'); // Needed for acceptInvite
 const sendOtp = require('../utils/sendOTP');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');

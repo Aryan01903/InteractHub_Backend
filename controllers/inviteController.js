@@ -1,4 +1,4 @@
-const Invite=require('../models/Invite')
+const Invite=require('../models/invite')
 const crypto=require('crypto')
 const {sendInviteEmail}=require('../utils/sendInviteEmail')
 const {createAuditLog}=require("../utils/createAuditLog")
