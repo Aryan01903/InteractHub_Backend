@@ -127,13 +127,13 @@ exports.verifyOtpSignup = async (req, res) => {
 // SIGNIN (LOGIN)
 exports.signin = async (req, res) => {
   try {
-    const { email, password, tenantId } = req.body;
+    const { email, password } = req.body;
 
-    if (!email || !password || !tenantId) {
-      return res.status(400).json({ error: 'Email, password and tenantId required' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
     }
 
-    const user = await User.findOne({ email, tenantId });
+    const user = await User.findOne({ email });
     if (!user || !user.isVerified) {
       return res.status(404).json({ error: 'User not found or not verified' });
     }
@@ -156,7 +156,8 @@ exports.signin = async (req, res) => {
     res.status(200).json({
       email: user.email,
       token,
-      role: user.role
+      role: user.role,
+      tenantId : user.tenantId
     });
 
   } catch (err) {
