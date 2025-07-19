@@ -4,9 +4,12 @@ const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
+const { startCleanupScheduler } = require('./utils/invitationCleanUp');
 
 const app = express();
 const server = http.createServer(app);
+
+startCleanupScheduler();
 
 // CORS configuration
 const corsOptions = {
@@ -28,15 +31,9 @@ app.get('/test-cors', (req, res)=> {
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
-const tenantRoutes = require('./routes/tenantRoutes');
-const inviteRoutes = require('./routes/inviteRoutes');
-const auditRoutes = require('./routes/auditLogRoutes');
 const whiteboardRoutes = require('./routes/whiteboardRoutes');
 
 app.use('/api/auth', authRoutes);
-app.use('/api/tenants', tenantRoutes);
-app.use('/api/invites', inviteRoutes);
-app.use('/api/audit', auditRoutes);
 app.use('/api/whiteboard', whiteboardRoutes);
 
 // Error-handling middleware

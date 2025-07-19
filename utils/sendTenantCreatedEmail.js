@@ -21,8 +21,8 @@ exports.sendTenantCreatedEmail = async (email, tenantId) => {
     const info = await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: email,
-      subject: "Your BoardStack Tenant is Ready",
-      text: `Hi,\n\nYour tenant has been created successfully.\nTenant ID: ${tenantId}\n\nThanks,\nBoardStack Team`
+      subject: "Your InteractHub Tenant is Ready",
+      text: `Hi,\n\nYour tenant has been created successfully.\nTenant ID: ${tenantId}\n\nThanks,\nInteractHub Team`
     });
 
     console.log('Email sent:', info.response);

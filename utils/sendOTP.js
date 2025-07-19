@@ -13,8 +13,8 @@ module.exports=async function sendOTP(email,otp){
         await transporter.sendMail({
         from : process.env.MAIL_USER,
         to : email,
-        subject : 'Your OTP for BoardStack',
-        text : `Your OTP is ${otp}. It will expire in 5 minutes\n\nThanks,\nBoardStack Team`
+        subject : 'Your OTP for InteractHub',
+        text : `Your OTP is ${otp}. It will expire in 5 minutes\n\nThanks,\nInteractHub Team`
         })
     }catch(err){
         console.log("Error Occured",err.message)

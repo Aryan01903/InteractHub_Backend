@@ -1,5 +1,4 @@
 const Whiteboard=require('../models/board.model')
-const {createAuditLog}=require('../utils/createAuditLog')
 
 exports.createWhiteboard=async(req,res)=>{
     const {name,data}=req.body;
@@ -11,12 +10,6 @@ exports.createWhiteboard=async(req,res)=>{
             data,
             tenantId,
             createdBy : userId
-        })
-        await createAuditLog({
-            userId,
-            tenantId,
-            action : 'create-whiteboard',
-            details : {name}
         })
         res.status(201).json(whiteboard)
     }catch(err){
@@ -44,12 +37,6 @@ exports.updateWhiteboard=async(req,res)=>{
         board.versions.push({data : board.data});
         board.data=data;
         await board.save();
-        await createAuditLog({
-            userId,
-            tenantId,
-            action : 'update-whiteboard',
-            details : {whiteboard : id}
-        }) 
         res.status(200).json(board)
     }catch(err){
         res.status(500).json({
@@ -98,7 +85,7 @@ exports.getWhiteboardVersions=async(Request,res)=>{
         })
         if(!board){
             return res.status(404).json({
-                error : 'Whityeboard not found'
+                error : 'Whiteboard not found'
             })
         }
         res.status(200).json(board.versions)
@@ -132,13 +119,6 @@ exports.restoreVersion=async(req,res)=>{
         board.versions.push({data : board.data})
         board.data=board.versions[versionIndex].data;
         await board.save();
-
-        await createAuditLog({
-            userId,
-            tenantId,
-            action : 'restore-version',
-            details : {whiteboardId : id,restoreVersion : versionIndex}
-        })
         res.satus(200).json({
             message : 'Whiteboard restored to previous version',board
         })

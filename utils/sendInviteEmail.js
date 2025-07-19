@@ -16,8 +16,8 @@ exports.sendInviteEmail=async(email,token,tenantId)=>{
         await transpoter.sendMail({
         from : process.env.MAIL_USER,
         to : email,
-        subject : 'You are invited to join BoardStack',
-        text : `You've been invited to join a tenant on BoardStack.\n\nTenant ID: ${tenantId}\nInvite Link: ${link}\n\nThis invite will expire in 24 hours.\n\nThanks,\nBoardStack Team`
+        subject : 'You are invited to join InteractHub',
+        text : `You've been invited to join a tenant on InteractHub.\n\nTenant ID: ${tenantId}\nInvite Link: ${link}\n\nThis invite will expire in 24 hours.\n\nThanks,\nInteractHub Team`
         })
     }catch(err){
         console.error("Error Occured ",err.message)

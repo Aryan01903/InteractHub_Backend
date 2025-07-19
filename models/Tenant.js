@@ -6,9 +6,6 @@ const tenantSchema=new mongoose.Schema({
         required : true,
         unique : true
     },
-    logoUrl : {
-        type : String
-    },
     adminEmail : {
         type : String,
         required : true,

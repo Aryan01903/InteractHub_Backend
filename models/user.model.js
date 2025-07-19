@@ -2,6 +2,10 @@ const mongoose=require("mongoose")
 
 
 const userSchema=new mongoose.Schema({
+    name : {
+        type : String,
+        required : true
+    },
     email : {
         type : String,
         lowercase : true,
@@ -9,7 +13,7 @@ const userSchema=new mongoose.Schema({
         required : true,
         unique : true
     },
-    passwordHash : {
+    password: {
         type : String,
         required : false,
     },
