@@ -1,5 +1,4 @@
 const mongoose=require('mongoose')
-
 const videoRoomSchema=new mongoose.Schema({
     tenantId : {
         type : mongoose.Schema.Types.ObjectId,
