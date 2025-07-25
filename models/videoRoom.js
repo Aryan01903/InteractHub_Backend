@@ -5,11 +5,6 @@ const videoRoomSchema=new mongoose.Schema({
         ref : 'Tenant',
         required : true
     },
-    boardId : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : 'Whiteboard',
-        required : true
-    },
     roomId : {
         type : String,
         unique : true,
@@ -28,6 +23,10 @@ const videoRoomSchema=new mongoose.Schema({
         index : {
             expires : 21600,                // 6 hours in seconds
         }
+    },
+    scheduledAt : {
+        type : Date,
+        default : null
     }
 })
 

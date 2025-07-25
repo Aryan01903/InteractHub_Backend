@@ -32,9 +32,11 @@ app.get('/test-cors', (req, res)=> {
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const whiteboardRoutes = require('./routes/whiteboardRoutes');
+const videoRoutes = require('./routes/videoRoutes')
 
 app.use('/api/auth', authRoutes);
 app.use('/api/whiteboard', whiteboardRoutes);
+app.use('/api/videoCall',videoRoutes)
 
 // Error-handling middleware
 app.use((err, req, res, next) => {

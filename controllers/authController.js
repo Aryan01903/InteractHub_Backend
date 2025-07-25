@@ -7,6 +7,9 @@ const jwt = require('jsonwebtoken');
 const { sendTenantCreatedEmail } = require('../utils/sendTenantCreatedEmail');
 const {sendInviteEmail} = require('../utils/sendInviteEmail')
 const crypto = require('crypto');
+const redis=require('redis')
+
+const redisClient=redis.createClient();
 
 // SEND OTP FOR SIGNUP
 exports.sendOtpSignup = async (req, res) => {
@@ -459,3 +462,21 @@ exports.deleteMember = async (req, res) => {
   }
 };
 
+
+exports.userLogout = async (req,res)=>{
+  try {
+    const token = req.headers['authorization']?.split(' ')[1];
+
+    if (!token) {
+      return res.status(400).json({ message: 'No token provided' });
+    }
+
+    await redisClient.sadd('blacklist', token);
+    redisClient.expire('blacklist', 3600);
+
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error during logout' });
+  }
+}
