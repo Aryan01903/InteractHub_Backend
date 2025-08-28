@@ -1,6 +1,6 @@
 # 🧾 InteractHub Backend (API)
 
-**A multi-tenant SaaS backend** for a real-time whiteboard collaboration and Video Conference web app built with the **MERN** stack.
+**A multi-tenant SaaS backend** for a real-time whiteboard collaboration and Video Conferencing web app built with the **MERN** stack.
 
 ---
 
@@ -18,12 +18,12 @@
   - Roles: `admin`, `member`
   - Admins can invite users via **token-based email invite**
 
-- 📜 **Audit Logs**
-  - Tracks key actions (whiteboard edits, tenant creation, etc.)
-
 - 🎨 **Whiteboard Collaboration**
   - Real-time updates using `Socket.IO`
   - Version tracking & restore capability
+
+- 🎥 **Video Confrencing**
+  - enable interaction between admin and tenant menbers
 
 
 ---
