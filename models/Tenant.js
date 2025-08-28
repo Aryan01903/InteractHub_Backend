@@ -6,8 +6,8 @@ const tenantSchema=new mongoose.Schema({
         required : true,
         unique : true
     },
-    adminEmail : {
-        type : String,
+    adminEmails : {
+        type : [String],
         required : true,
         unique : true
     },

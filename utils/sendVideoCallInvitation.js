@@ -34,16 +34,22 @@ const sendInvitationEmails = async (emails, roomId, senderName, startTime, durat
       await transporter.sendMail({
         from: `"${fromDisplay}" <${process.env.MAIL_USER}>`,
         to: email,
-        subject: 'You are invited to join a video conference',
+        subject: 'Invitation to Join a Video Conference on InteractHub',
         html: `
-          <p>Hello,</p>
-          <p><strong>${senderName} from ${tenantName}</strong> has invited you to a video conference.</p>
-          <p><strong>When:</strong> ${startStr} to ${endStr} (Duration: ${durationHours} hour${durationHours > 1 ? 's' : ''})</p>
-          <p><a href="${inviteLink}">Click here to join the call</a></p>
-          <p>This link will expire after the meeting ends.</p>
-          <p>Thanks,<br/>BoardStack Team</p>
-        `,
-      });
+          <p>Hi there,</p>
+          <p><strong>${senderName}</strong> from <strong>${tenantName}</strong> has invited you to join an exciting video conference!</p>
+          <p><strong>Meeting Details:</strong></p>
+          <ul>
+            <li><strong>When:</strong> ${startStr} to ${endStr} (Duration: ${durationHours} hour${durationHours > 1 ? 's' : ''})</li>
+            <li><strong>Location:</strong> Online - <a href="${inviteLink}">Click here to join the call</a></li>
+          </ul>
+          <p>Please note that the link will expire after the meeting concludes, so be sure to join in time!</p>
+          <p>If you have any questions or need help, feel free to reach out.</p>
+          <p>Looking forward to seeing you there!</p>
+          <p>Thanks and Best Regards,<br/>The InteractHub Team</p>
+        `
+    })
+
     }
   } catch (error) {
     console.error('Failed to send invitation emails:', error);

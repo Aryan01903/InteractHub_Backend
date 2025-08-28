@@ -134,69 +134,80 @@ exports.sendOtpSignup = async (req, res) => {
 
 
 
-exports.verifyOtp=async(req,res)=>{
-  const { email, otp, tenantName, role}=req.body;
-  if(!email || !otp ){
+exports.verifyOtp = async (req, res) => {
+  const { email, otp, tenantName, role } = req.body;
+
+  if (!email || !otp) {
     return res.status(400).json({
       message: "All Fields are Required"
-    })
+    });
   }
 
-  const user=await User.findOne({email})
-  if(!user){
+  const user = await User.findOne({ email });
+  if (!user) {
     return res.status(400).json({
       message: "User not found with this Email"
-    })
+    });
   }
 
-  // check otp match
-  if(user.otp.toString() !== otp.toString()){
+  // Check if OTP matches
+  if (user.otp.toString() !== otp.toString()) {
     return res.status(400).json({
       message: "Invalid OTP"
     });
   }
 
-  // check for otp expiration
-  if(user.otpExpires<new Date()){
+  // Check for OTP expiration
+  if (user.otpExpires < new Date()) {
     return res.status(400).json({
       message: "OTP is Expired"
-    })
+    });
   }
 
-  // Mark User Verified
-  user.isVerified=true;
-  user.otp=undefined;
-  user.otpExpires=undefined;
+  // Mark User as Verified
+  user.isVerified = true;
+  user.otp = undefined;
+  user.otpExpires = undefined;
 
-  // if admin, create Tenant 
-  if(user.role=='admin'){
-    if(!tenantName){
+  // If the user is an admin, create a tenant
+  if (user.role === 'admin') {
+    if (!tenantName) {
       return res.status(400).json({
         message: 'tenantName is required to create tenantId'
-      })
+      });
     }
-    const tenantExists=await Tenant.findOne({name: tenantName})
-    if(tenantExists){
+    const tenantExists = await Tenant.findOne({ name: tenantName });
+    if (tenantExists) {
       return res.status(400).json({
         message: "tenantName already exists"
-      })
+      });
     }
-    const tenant= await Tenant.create({name:tenantName, adminEmail:email})
-    await sendTenantCreatedEmail(email,tenant._id)
-    user.tenantId=tenant._id
+
+    const tenant = await Tenant.create({ name: tenantName, adminEmail: email });
+    await sendTenantCreatedEmail(email, tenant._id);
+    user.tenantId = tenant._id;
+    user.tenantName = tenant.name;
+  } else {
+    // If user is a member, fetch tenantName from associated tenantId
+    const tenant = await Tenant.findById(user.tenantId);
+    if (tenant) {
+      user.tenantName = tenant.name;
+    }
   }
 
-  await user.save()
-  const tokenPayload = {
-      userId: user._id,
-      email: user.email,
-      role: user.role,
-      tenantId: user.tenantId,
-    };
+  await user.save();
 
-    const token = jwt.sign(tokenPayload, process.env.SECRET, {
-      expiresIn: '1d',
-    });
+  const tokenPayload = {
+    userId: user._id,
+    email: user.email,
+    role: user.role,
+    tenantId: user.tenantId,
+    tenantName: user.tenantName, // Make sure tenantName is added for all users
+  };
+
+  const token = jwt.sign(tokenPayload, process.env.SECRET, {
+    expiresIn: '1d',
+  });
 
   return res.status(200).json({
     message: "User Registered Successfully",
@@ -206,11 +217,11 @@ exports.verifyOtp=async(req,res)=>{
       email: user.email,
       role: user.role,
       tenantId: user.tenantId,
+      name: user.name,
+      tenantName: user.tenantName,
     },
-  })
-
-
-}
+  });
+};
 
 // SIGNIN (LOGIN)
 exports.signin = async (req, res) => {
@@ -252,6 +263,8 @@ exports.signin = async (req, res) => {
       token,
       role: user.role,
       tenantId: user.tenantId,
+      name: user.name,
+      tenantName: user.tenantName
     });
 
   } catch (err) {
@@ -270,7 +283,7 @@ exports.sendInvite = async (req, res) => {
       return res.status(403).json({ message: 'Only admins can send invites' });
     }
 
-    const { email, role = 'member' } = req.body;
+    const { email, role } = req.body;
 
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
@@ -298,12 +311,13 @@ exports.sendInvite = async (req, res) => {
       email: normalizedEmail,
       token,
       tenantId: currentUser.tenantId,
+      tenantName: currentUser.tenantName,
       role,
       expiresAt,
       invitedBy: currentUser._id,
     });
 
-    await sendInviteEmail(normalizedEmail, token, currentUser.tenantId);
+    await sendInviteEmail(normalizedEmail, token, currentUser.tenantId, currentUser.tenantName);
 
     return res.status(200).json({ message: 'Invite sent successfully', inviteToken: token });
 
@@ -359,6 +373,7 @@ exports.acceptInvite = async (req, res) => {
       email: normalizedEmail,
       password: hashedPassword,
       tenantId: invite.tenantId,
+      tenantName: invite.tenantName,
       role: invite.role || 'member',
       isVerified: true
     });
@@ -375,6 +390,7 @@ exports.acceptInvite = async (req, res) => {
         email: newUser.email,
         tenantId: newUser.tenantId,
         role: newUser.role,
+        tenantName: newUser.tenantName
       }
     });
 
@@ -387,23 +403,30 @@ exports.acceptInvite = async (req, res) => {
 
 exports.getAllMembers = async (req, res) => {
   try {
+    if(!req.user){
+      return res.status(401).json({message: 'UnAuthorized Access'})
+    }
     const currentUserRole = req.user?.role;
 
-    const members = await User.find({ role: 'member', tenantId: req.user.tenantId});
+    const members = await User.find({ tenantId: req.user.tenantId});
 
     if (members.length === 0) {
       return res.status(404).json({ message: 'No members found' });
     }
 
     const result = members.map((member) => {
+      const joinedInIST = new Date(member.createdAt).toLocaleString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour12: false,  // 24-hour time format
+        });
       if (currentUserRole === 'admin') {
         return {
           name: member.name,
           email: member.email,
-          joinedIn: member.createdAt?.toISOString() || 'Unknown',
+          joinedIn: joinedInIST || 'Unknown',
         };
       } else {
-        return { name: member.name };
+        return { name: member.name, joinedIn: joinedInIST || 'Unknown' };
       }
     });
 
@@ -462,21 +485,3 @@ exports.deleteMember = async (req, res) => {
   }
 };
 
-
-exports.userLogout = async (req,res)=>{
-  try {
-    const token = req.headers['authorization']?.split(' ')[1];
-
-    if (!token) {
-      return res.status(400).json({ message: 'No token provided' });
-    }
-
-    await redisClient.sadd('blacklist', token);
-    redisClient.expire('blacklist', 3600);
-
-    res.status(200).json({ message: 'Logged out successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error during logout' });
-  }
-}

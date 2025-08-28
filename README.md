@@ -1,6 +1,6 @@
-# 🧾 BoardStack Backend (API)
+# 🧾 InteractHub Backend (API)
 
-**A multi-tenant SaaS backend** for a real-time whiteboard collaboration app built with the **MERN** stack.
+**A multi-tenant SaaS backend** for a real-time whiteboard collaboration and Video Conference web app built with the **MERN** stack.
 
 ---
 
@@ -32,33 +32,27 @@
 
 ### 🔐 Auth
 
-| Method | Endpoint                   | Description                 |
-|--------|----------------------------|-----------------------------|
-| POST   | `/api/auth/send-otp`       | Send OTP to email           |
-| POST   | `/api/auth/register`       | Verify OTP, complete signup |
-| POST   | `/api/auth/login`          | Login using passwordHash    |
-| POST   | `/api/auth/accept-invite`  | Accept invite + join tenant |
+| Method | Endpoint                   | Description                  | Payload
+|--------|----------------------------|------------------------------|---------
+| POST   | `/api/auth/register`       | Send OTP to email            | name, email, password, tenantName(admin), tenantId(member)                 |
+| POST   | `/api/auth/verify-otp`     | Verify OTP, complete signup  | email, role, otp                                                            |
+| POST   | `/api/auth/login`          | Login using passwordHash     | email, password                                                             |
+| POST   | `/api/auth/accept-invite`  | Accept invite + join tenant  | email, name , invite token, password                                        |
+| POST   | `/api/auth/sendInvite`     | Invitation for member/admin  | email, role |
+| GET    | `/api/auth/members`        | Get the all joinee of Tenant | token |
+| DELETE | `/api/auth/deleteMember`   | Delete the Members of Tenant | name, email |
 
-### 🏢 Tenant
+---
 
-| Method | Endpoint              | Description                  |
-|--------|-----------------------|------------------------------|
-| POST   | `/api/tenants/create` | Create tenant *(Admin only)* |
+### 🎥 Video
 
-### 📩 Invites
+| Method | Endpoint                 | Description                       |
+|--------|--------------------------|-----------------------------------|
+| POST   | `/api/videoCall/create`  | To create and Schedule Video Call |
 
-| Method | Endpoint              | Description                 |
-|--------|-----------------------|-----------------------------|
-| POST   | `/api/invites/send`   | Send invite *(Admin only)*  |
-| POST   | `/api/invites/resend` | Resend expired invite email |
+---
 
-### 🧾 Audit Logs
-
-| Method | Endpoint         | Description        |
-|--------|------------------|--------------------|
-| GET    | `/api/auditLogs` | View audit history |
-
-### 🧱 Whiteboard
+### 📝 Whiteboard
 
 | Method | Endpoint                                        | Description                       |
 |--------|-------------------------------------------------|-----------------------------------|
@@ -68,15 +62,6 @@
 | GET    | `/api/whiteboard/get/:id`                       | Get one whiteboard by ID          |
 | GET    | `/api/whiteboard/get/:id/versions`              | Fetch board version history       |
 | GET    | `/api/whiteboard/get/:id/restore/:versionIndex` | Restore board to previous version |
-
----
-
-## 🔌 Real-Time Collaboration
-
-- Clients connect to Socket.IO server
-- Emit `joinBoard` event with board ID
-- On drawing, emit `whiteboardUpdate`
-- All users in same board room receive updates instantly
 
 ---
 

@@ -21,10 +21,9 @@ exports.sendTenantCreatedEmail = async (email, tenantId) => {
     const info = await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: email,
-      subject: "Your InteractHub Tenant is Ready",
-      text: `Hi,\n\nYour tenant has been created successfully.\nTenant ID: ${tenantId}\n\nThanks,\nInteractHub Team`
+      subject: "Welcome to InteractHub - Your Tenant is Ready",
+      text: `Hello,\n\nWe're excited to let you know that your tenant has been successfully created on InteractHub.\n\nTenant Details:\n\nTenant Name: ${tenantName}\nTenant ID: ${tenantId}\n\nYou can now start managing your tenant from your dashboard.\n\nIf you need any assistance or have questions, feel free to reach out to our support team.\n\nThanks for choosing InteractHub!\n\nBest regards,\nThe InteractHub Team`
     });
-
     console.log('Email sent:', info.response);
   } catch (err) {
     console.error('sendTenantCreatedEmail error:', err);
