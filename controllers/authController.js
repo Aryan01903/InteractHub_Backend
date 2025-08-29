@@ -202,7 +202,7 @@ exports.verifyOtp = async (req, res) => {
     email: user.email,
     role: user.role,
     tenantId: user.tenantId,
-    tenantName: user.tenantName, // Make sure tenantName is added for all users
+    tenantName: user.tenantName,
   };
 
   const token = jwt.sign(tokenPayload, process.env.SECRET, {
@@ -424,9 +424,10 @@ exports.getAllMembers = async (req, res) => {
           name: member.name,
           email: member.email,
           joinedIn: joinedInIST || 'Unknown',
+          role: member.role
         };
       } else {
-        return { name: member.name, joinedIn: joinedInIST || 'Unknown' };
+        return { name: member.name, joinedIn: joinedInIST || 'Unknown', role: member.role };
       }
     });
 

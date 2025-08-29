@@ -9,7 +9,7 @@ const tenantSchema=new mongoose.Schema({
     adminEmails : {
         type : [String],
         required : true,
-        unique : true
+        unique : false
     },
     createdAt : {
         type : Date,
