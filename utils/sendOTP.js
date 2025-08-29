@@ -14,22 +14,7 @@ module.exports=async function sendOTP(email,otp){
             from: process.env.MAIL_USER,
             to: email,
             subject: 'Your OTP for InteractHub',
-            text: `
-                Dear User,
-
-                We have received a request to verify your account on InteractHub.
-
-                Your One-Time Password (OTP) is: **${otp}**
-
-                This OTP is valid for the next 5 minutes. Please enter it on the website to complete the verification process.
-
-                If you did not request this, please ignore this email.
-
-                Thank you for using InteractHub!
-
-                Best regards,
-                The InteractHub Team
-            `
+            text: `Dear User,\nWe have received a request to verify your account on InteractHub. \nYour One-Time Password (OTP) is: **${otp}**\nThis OTP is valid for the next 5 minutes\nPlease enter it on the website to complete the verification process.\nIf you did not request this, please ignore this email.\nThank you for using InteractHub!\nBest regards,\nThe InteractHub Team`
         });
 
     }catch(err){
