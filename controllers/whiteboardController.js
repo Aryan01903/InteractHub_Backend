@@ -77,7 +77,7 @@ exports.getWhiteboardsById=async(req,res)=>{
 }
 
 // get all versions of Whiteboard
-exports.getWhiteboardVersions=async(Request,res)=>{
+exports.getWhiteboardVersions=async(req,res)=>{
     try{
         const board=await Whiteboard.findOne({
             _id : req.params.id,
