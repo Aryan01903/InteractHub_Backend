@@ -61,6 +61,23 @@ io.on('connection', (socket) => {
   socket.on('whiteboardUpdate', ({ boardId, data }) => {
     socket.to(boardId).emit('whiteboardUpdate', data);
   });
+  // Video Call Signaling
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    console.log(`Client ${socket.id} joined video room ${roomId}`);
+  });
+
+  socket.on('offer', ({ roomId, offer, from }) => {
+    socket.to(roomId).emit('offer', { offer, from });
+  });
+
+  socket.on('answer', ({ roomId, answer, from }) => {
+    socket.to(roomId).emit('answer', { answer, from });
+  });
+
+  socket.on('ice-candidate', ({ roomId, candidate, from }) => {
+    socket.to(roomId).emit('ice-candidate', { candidate, from });
+  });
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
