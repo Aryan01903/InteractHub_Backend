@@ -38,7 +38,7 @@ exports.createAndScheduleRoom = async(req,res)=>{
       );
     }
 
-    res.satus(201).json({
+    res.status(201).json({
         message: isScheduled ? "Room scheduled successfully" : "Room created successfully",
         roomId,
         createdBy: req.user._id,
