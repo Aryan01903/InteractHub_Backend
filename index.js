@@ -5,6 +5,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 const { startCleanupScheduler } = require('./utils/invitationCleanUp');
+const Whiteboard = require('./models/Whiteboard');
 
 const app = express();
 const server = http.createServer(app);
@@ -54,13 +55,29 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
-  socket.on('joinBoard', (boardId) => {
+  
+  socket.on('joinBoard', async (boardId) => {
     socket.join(boardId);
     console.log(`Client ${socket.id} joined board ${boardId}`);
+
+    // Fetch and send initial whiteboard state
+    try {
+      const whiteboard = await Whiteboard.findById(boardId);
+      if (whiteboard && whiteboard.data) {
+        socket.emit('initialWhiteboardState', { data: whiteboard.data });
+        console.log(`Sent initialWhiteboardState for board ${boardId}`);
+      }
+    } catch (err) {
+      console.error('Error fetching initial whiteboard state:', err.message);
+    }
   });
+  
   socket.on('whiteboardUpdate', ({ boardId, data }) => {
+    console.log(`Received whiteboardUpdate for board ${boardId}:`, data);
     socket.to(boardId).emit('whiteboardUpdate', data);
+    console.log(`Broadcasted whiteboardUpdate to board ${boardId}`);
   });
+  
   // Video Call Signaling
   socket.on('joinRoom', (roomId) => {
     socket.join(roomId);
@@ -78,6 +95,7 @@ io.on('connection', (socket) => {
   socket.on('ice-candidate', ({ roomId, candidate, from }) => {
     socket.to(roomId).emit('ice-candidate', { candidate, from });
   });
+  
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
