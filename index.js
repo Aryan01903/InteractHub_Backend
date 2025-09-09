@@ -5,7 +5,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 const { startCleanupScheduler } = require('./utils/invitationCleanUp');
-const Whiteboard = require('./models/Whiteboard');
+const Whiteboard = require('./models/board.model');
 
 const app = express();
 const server = http.createServer(app);
