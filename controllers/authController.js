@@ -183,7 +183,7 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
-    const tenant = await Tenant.create({ name: tenantName, adminEmail: email });
+    const tenant = await Tenant.create({ name: tenantName, adminEmails: [email] });
     await sendTenantCreatedEmail(email, tenant._id);
     user.tenantId = tenant._id;
     user.tenantName = tenant.name;

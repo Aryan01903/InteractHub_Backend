@@ -37,15 +37,21 @@ const sendInvitationEmails = async (emails, roomId, senderName, startTime, durat
         subject: 'Invitation to Join a Video Conference on InteractHub',
         html: `
           <p>Hi there,</p>
+          <br>
           <p><strong>${senderName}</strong> from <strong>${tenantName}</strong> has invited you to join an exciting video conference!</p>
+          <br>
           <p><strong>Meeting Details:</strong></p>
           <ul>
             <li><strong>When:</strong> ${startStr} to ${endStr} (Duration: ${durationHours} hour${durationHours > 1 ? 's' : ''})</li>
             <li><strong>Location:</strong> Online - <a href="${inviteLink}">Click here to join the call</a></li>
           </ul>
+          <br>
           <p>Please note that the link will expire after the meeting concludes, so be sure to join in time!</p>
+          <br>
           <p>If you have any questions or need help, feel free to reach out.</p>
+          <br>
           <p>Looking forward to seeing you there!</p>
+          <br>
           <p>Thanks and Best Regards,<br/>The InteractHub Team</p>
         `
     })

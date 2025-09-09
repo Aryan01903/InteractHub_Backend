@@ -22,6 +22,10 @@ const userSchema=new mongoose.Schema({
         ref : 'Tenant',
         required : false
     },
+    tenantName : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tenant', 
+    },
     role : {
         type : String,
         enum : ['admin', 'member'],
