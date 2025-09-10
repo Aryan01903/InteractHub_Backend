@@ -408,7 +408,11 @@ exports.getAllMembers = async (req, res) => {
     }
     const currentUserRole = req.user?.role;
 
-    const members = await User.find({ tenantId: req.user.tenantId});
+    const members = await User.find({ 
+      tenantId: req.user.tenantId,
+      _id: {$ne: req.user._id},
+      isVerified: {$ne: false}
+    });
 
     if (members.length === 0) {
       return res.status(404).json({ message: 'No members found' });
