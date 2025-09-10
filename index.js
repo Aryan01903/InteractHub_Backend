@@ -5,11 +5,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 const { startCleanupScheduler } = require('./utils/invitationCleanUp');
-const Whiteboard = require('./models/board.model');
 
 const app = express();
 const server = http.createServer(app);
-
 startCleanupScheduler();
 
 // CORS configuration
@@ -34,7 +32,6 @@ app.get('/test-cors', (req, res) => {
 const authRoutes = require('./routes/authRoutes');
 const whiteboardRoutes = require('./routes/whiteboardRoutes');
 const videoRoutes = require('./routes/videoRoutes');
-
 app.use('/api/auth', authRoutes);
 app.use('/api/whiteboard', whiteboardRoutes);
 app.use('/api/videoCall', videoRoutes);
@@ -48,10 +45,12 @@ app.use((err, req, res, next) => {
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: '*', // Consider restricting in production
+    origin: '*',
     methods: ['GET', 'POST'],
   },
 });
+
+const Whiteboard = mongoose.model('Whiteboard');
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
@@ -59,26 +58,32 @@ io.on('connection', (socket) => {
   socket.on('joinBoard', async (boardId) => {
     socket.join(boardId);
     console.log(`Client ${socket.id} joined board ${boardId}`);
-
-    // Fetch and send initial whiteboard state
     try {
       const whiteboard = await Whiteboard.findById(boardId);
       if (whiteboard && whiteboard.data) {
-        socket.emit('initialWhiteboardState', { data: String(whiteboard.data) });
-        console.log(`Sent initialWhiteboardState for board ${boardId}`);
+        socket.emit('initialWhiteboardState', { data: whiteboard.data });
       }
     } catch (err) {
       console.error('Error fetching initial whiteboard state:', err.message);
     }
   });
 
-  socket.on('whiteboardUpdate', ({ boardId, data }) => {
-    console.log(`Received whiteboardUpdate for board ${boardId}:`, data);
-    socket.to(boardId).emit('whiteboardUpdate', data);
-    console.log(`Broadcasted whiteboardUpdate to board ${boardId}`);
+  socket.on('requestInitialState', async (boardId) => {
+    try {
+      const whiteboard = await Whiteboard.findById(boardId);
+      if (whiteboard && whiteboard.data) {
+        socket.emit('initialWhiteboardState', { data: whiteboard.data });
+      }
+    } catch (err) {
+      console.error('Error sending initial whiteboard state:', err.message);
+    }
   });
 
-  // Video Call Signaling
+  socket.on('whiteboardUpdate', ({ boardId, data }) => {
+    console.log('Broadcasting whiteboardUpdate:', { boardId, data });
+    socket.to(boardId).emit('whiteboardUpdate', data);
+  });
+
   socket.on('joinRoom', (roomId) => {
     socket.join(roomId);
     console.log(`Client ${socket.id} joined video room ${roomId}`);
@@ -102,7 +107,8 @@ io.on('connection', (socket) => {
 });
 
 // MongoDB connection
-mongoose.connect(process.env.DB_URL)
+mongoose
+  .connect(process.env.DB_URL)
   .then(() => {
     console.log('Connected to MongoDB');
     server.listen(process.env.PORT || 5000, () => {

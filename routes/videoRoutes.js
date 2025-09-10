@@ -6,6 +6,6 @@ const isAdmin=require('../middlewares/isAdminMW')
 
 
 router.post('/create',authMW,isAdmin,createAndScheduleRoom)
-router.post('/getVideo',authMW,getActiveVideoRooms)
+router.post('/get-video',authMW,getActiveVideoRooms)
 
 module.exports=router;
