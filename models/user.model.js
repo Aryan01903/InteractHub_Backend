@@ -21,8 +21,7 @@ const userSchema = new mongoose.Schema({
         required: false,
     },
     tenantName: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Tenant',
+        type: String,
     },
     role: {
         type: String,
