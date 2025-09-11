@@ -1,47 +1,44 @@
-const mongoose=require("mongoose")
-
-
-const userSchema=new mongoose.Schema({
-    name : {
-        type : String,
+const mongoose = require('mongoose')
+const userSchema = new mongoose.Schema({
+    name: {
+        type: String,
         required : true
     },
-    email : {
-        type : String,
-        lowercase : true,
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
         match: [/.+@.+\..+/, "Please enter a valid email address"],
-        required : true,
-        unique : true
     },
     password: {
-        type : String,
-        required : false,
+        type: String,
+        required: true,
     },
-    tenantId : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : 'Tenant',
-        required : false
-    },
-    tenantName : {
+    tenantId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Tenant', 
+        ref: 'Tenant',
+        required: false,
     },
-    role : {
-        type : String,
-        enum : ['admin', 'member'],
-        default : 'member'
+    tenantName: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tenant',
     },
-    isVerified : {
-        type : Boolean,
-        default : false
+    role: {
+        type: String,
+        enum: ['admin','member'],
+        default: 'member'
     },
-    otp : String,
-    otpExpires : String,
-    createdAt : {
-        type : Date,
-        default : Date.now
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    otp: String,
+    otpExpires: Date,
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 })
 
-
-module.exports=mongoose.model('User',userSchema)
+module.exports = mongoose.model('User', userSchema)

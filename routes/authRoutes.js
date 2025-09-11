@@ -1,16 +1,40 @@
-const router=require('express').Router();
-const authMW=require("../middlewares/authMW")
-const isAdmin=require('../middlewares/isAdminMW')
+const router = require("express").Router();
+const authMW = require("../middlewares/authMW");
+const isAdmin = require("../middlewares/isAdminMW");
 
-const {sendOtpSignup, signin, getAllMembers, verifyOtp, deleteMember, sendInvite, userLogout, acceptInvite}=require('../controllers/authController');
+const {
+  userRegister,
+  userLogin,
+  verifyOtp,
+  getAllMembers,
+  sendInvitation,
+  acceptInvite,
+  deleteMember,
+  getProfile,
+  forgotPassword,
+  resetPassword,
+  generateLoginOtp
+} = require("../controllers/authController");
 
+// Auth + Registration
+router.post("/register", userRegister);
+router.post("/verify-otp", verifyOtp);
+router.post("/login", userLogin);
+router.post("/generate-otp",generateLoginOtp)
 
-router.post('/register', sendOtpSignup);
-router.post('/verify-otp', verifyOtp);
-router.post('/login', signin);
-router.get('/members',authMW, getAllMembers);
-router.post('/accept-invite', acceptInvite);
-router.post('/sendInvite',authMW,isAdmin,sendInvite);
-router.delete('/deleteMember', authMW, isAdmin, deleteMember);
+// Forgot & Reset Password
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
-module.exports=router;
+// Profile
+router.get("/profile", authMW, getProfile);
+
+// Members (Tenant)
+router.get("/members", authMW, getAllMembers);
+router.delete("/members/delete", authMW, isAdmin, deleteMember);
+
+// Invitations
+router.post("/invite", authMW, isAdmin, sendInvitation);
+router.post("/accept-invite", acceptInvite);
+
+module.exports = router;
