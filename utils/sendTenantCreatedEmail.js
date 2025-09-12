@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-exports.sendTenantCreatedEmail = async (email, tenantId) => {
+module.exports=async function sendTenantCreatedEmail(email, tenantId){
   console.log('sendTenantCreatedEmail called with:', { email, tenantId });
 
   if (!email || !tenantId) {

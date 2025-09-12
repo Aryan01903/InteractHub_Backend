@@ -9,7 +9,7 @@ const transpoter=nodemailer.createTransport({
     }
 })
 
-exports.sendInviteEmail=async(email,token,tenantId,tenantName)=>{
+module.exports=async function sendInviteEmail(email,token,tenantId,tenantName){
     const link = `${process.env.FRONTEND_URL}/acceptInvite?token=${token}`;
 
     try{

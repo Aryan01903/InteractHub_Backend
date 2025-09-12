@@ -3,7 +3,7 @@ const User = require("../models/user.model");
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 const sendInviteEmail = require('../utils/sendInviteEmail');
-const sendTenantCreatedEmail = require('../utils/sendTenantCreatedEmail');
+const sendTenantCreatedEmail = require("../utils/sendTenantCreatedEmail")
 const sendOtp = require('../utils/sendOTP');
 const jwt = require('jsonwebtoken');
 const Invite = require("../models/invite");
@@ -46,7 +46,7 @@ exports.userRegister = async (req, res) => {
 
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
 
         // Check if user already exists
         let user = await User.findOne({ email: normalizedEmail });
@@ -184,7 +184,7 @@ exports.verifyOtp = async (req, res) => {
                         await session.abortTransaction();
                         return res.status(400).json({ message: "Tenant name required for admin" });
                     }
-                    const tenant = await Tenant.create({ name: tenantName, adminEmails: [normalizedEmail] }, { session });
+                    const [tenant] = await Tenant.create([{ name: tenantName, adminEmails: [normalizedEmail] }],{ session });
                     await sendTenantCreatedEmail(normalizedEmail, tenant._id, tenant.name);
                     user.tenantId = tenant._id;
                     user.tenantName = tenant.name;
@@ -359,9 +359,10 @@ exports.getAllMembers = async (req, res) => {
         const currentUserRole = req.user.role;
         const members = await User.find({
             tenantId: req.user.tenantId,
-            _id: { $ne: req.user._id },
-            isVerified: {$ne: false}
+            _id: { $ne: req.user.id },
+            isVerified: { $ne: false },
         });
+
 
         if (members.length === 0) {
             return res.status(404).json({ message: "No members found" });

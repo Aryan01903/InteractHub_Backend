@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
  * @param {number} durationHours 
  * @param {string} tenantName 
  */
-const sendInvitationEmails = async (emails, roomId, senderName, startTime, durationHours, tenantName) => {
+module.exports = async function sendInvitationEmails(emails, roomId, senderName, startTime, durationHours, tenantName){
   try {
     const inviteLink = `${process.env.FRONTEND_URL}/video-call/${roomId}`;
 
@@ -62,4 +62,3 @@ const sendInvitationEmails = async (emails, roomId, senderName, startTime, durat
   }
 };
 
-module.exports = sendInvitationEmails;
