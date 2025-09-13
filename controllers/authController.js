@@ -348,11 +348,6 @@ exports.sendInvitation = async (req, res) => {
     }
 };
 
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const Invite = require("../models/invite");
-const User = require("../models/user.model");
-
 exports.acceptInvite = async (req, res) => {
   try {
     const { name, token, email, password } = req.body;
