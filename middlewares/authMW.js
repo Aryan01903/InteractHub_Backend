@@ -9,15 +9,14 @@ module.exports = (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-
     const decoded = jwt.verify(token, process.env.SECRET);
 
-    if (!decoded || !decoded.id) {
+    if (!decoded || !(decoded._id || decoded.id)) {
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
     req.user = {
-      id: decoded.id,
+      _id: decoded._id || decoded.id,
       role: decoded.role,
       tenantId: decoded.tenantId,
     };
