@@ -348,58 +348,72 @@ exports.sendInvitation = async (req, res) => {
     }
 };
 
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const Invite = require("../models/invite");
+const User = require("../models/user.model");
+
 exports.acceptInvite = async (req, res) => {
-    try {
-        const { name, token, email, password } = req.body;
-        if (!name || !token || !email || !password) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
-        const normalizedEmail = email.trim().toLowerCase();
-        const invite = await Invite.findOne({ token });
-
-        if (!invite) return res.status(400).json({ message: 'Invalid or missing invite token' });
-        if (invite.used) return res.status(400).json({ message: 'Invite has already been used' });
-        if (invite.expiresAt < Date.now()) return res.status(400).json({ message: 'Invite has expired' });
-        if (invite.email.toLowerCase() !== normalizedEmail) {
-            return res.status(400).json({ message: 'Email does not match the invite' });
-        }
-
-        const existingUser = await User.findOne({ email: normalizedEmail, tenantId: invite.tenantId });
-        if (existingUser) {
-            return res.status(400).json({ message: 'User already exists in this tenant' });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const newUser = await User.create({
-            name,
-            email: normalizedEmail,
-            password: hashedPassword,
-            tenantId: invite.tenantId,
-            tenantName: invite.tenantName,
-            role: invite.role || 'member',
-            isVerified: true
-        });
-
-        invite.used = true;
-        await invite.save();
-
-        return res.status(201).json({
-            message: 'User created successfully via invite',
-            user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                tenantId: newUser.tenantId,
-                role: newUser.role,
-                tenantName: newUser.tenantName
-            }
-        });
-    } catch (err) {
-        return res.status(500).json({ message: 'Internal server error' });
+  try {
+    const { name, token, email, password } = req.body;
+    if (!name || !token || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
     }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const invite = await Invite.findOne({ token });
+
+    if (!invite) return res.status(400).json({ message: "Invalid or missing invite token" });
+    if (invite.used) return res.status(400).json({ message: "Invite has already been used" });
+    if (invite.expiresAt < Date.now()) return res.status(400).json({ message: "Invite has expired" });
+    if (invite.email.toLowerCase() !== normalizedEmail) {
+      return res.status(400).json({ message: "Email does not match the invite" });
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail, tenantId: invite.tenantId });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists in this tenant" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      name,
+      email: normalizedEmail,
+      password: hashedPassword,
+      tenantId: invite.tenantId,
+      tenantName: invite.tenantName,
+      role: invite.role || "member",
+      isVerified: true,
+    });
+
+    invite.used = true;
+    await invite.save();
+
+    const jwtToken = jwt.sign(
+      { _id: newUser._id, role: newUser.role, tenantId: newUser.tenantId },
+      process.env.SECRET,
+      { expiresIn: "1d" }
+    );
+
+    return res.status(201).json({
+      message: "User created successfully via invite",
+      token: jwtToken,
+      tenantName: newUser.tenantName,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        tenantId: newUser.tenantId,
+        role: newUser.role,
+        tenantName: newUser.tenantName,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
+
 
 exports.deleteMember = async (req, res) => {
     try {
