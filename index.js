@@ -96,6 +96,11 @@ io.on('connection', (socket) => {
   socket.on('answer', ({ roomId, answer, from }) => {
     socket.to(roomId).emit('answer', { answer, from });
   });
+  
+  socket.on("chat-message", ({ roomId, message }) => {
+    console.log(`Chat message in room ${roomId}: ${message}`);
+    io.to(roomId).emit("chat-message", message);
+  });
 
   socket.on('ice-candidate', ({ roomId, candidate, from }) => {
     socket.to(roomId).emit('ice-candidate', { candidate, from });
