@@ -12,15 +12,17 @@ startCleanupScheduler();
 
 // CORS configuration
 const corsOptions = {
-  origin: ['https://boardstack-pi.vercel.app', 'https://interacthub.vercel.app', 'http://localhost:5173'],
+  origin: [
+    'https://boardstack-pi.vercel.app',
+    'https://interacthub.vercel.app',
+    'http://localhost:5173'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-
-// Parse JSON body
 app.use(express.json());
 
 // Test endpoint
@@ -55,6 +57,7 @@ const Whiteboard = mongoose.model('Whiteboard');
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
+  // Whiteboard events
   socket.on('joinBoard', async (boardId) => {
     socket.join(boardId);
     console.log(`Client ${socket.id} joined board ${boardId}`);
@@ -68,46 +71,44 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('requestInitialState', async (boardId) => {
-    try {
-      const whiteboard = await Whiteboard.findById(boardId);
-      if (whiteboard && whiteboard.data) {
-        socket.emit('initialWhiteboardState', { data: whiteboard.data });
-      }
-    } catch (err) {
-      console.error('Error sending initial whiteboard state:', err.message);
-    }
-  });
-
   socket.on('whiteboardUpdate', ({ boardId, data }) => {
-    console.log('Broadcasting whiteboardUpdate:', { boardId, data });
     socket.to(boardId).emit('whiteboardUpdate', data);
   });
 
+  // Video call events
   socket.on('joinRoom', (roomId) => {
     socket.join(roomId);
     console.log(`Client ${socket.id} joined video room ${roomId}`);
+
+    // Notify others in the room about new user
+    socket.to(roomId).emit('new-user', { socketId: socket.id });
   });
 
-  socket.on('offer', ({ roomId, offer, from }) => {
-    socket.to(roomId).emit('offer', { offer, from });
+  socket.on('offer', ({ roomId, offer, to }) => {
+    io.to(to).emit('offer', { offer, from: socket.id });
   });
 
-  socket.on('answer', ({ roomId, answer, from }) => {
-    socket.to(roomId).emit('answer', { answer, from });
-  });
-  
-  socket.on("chat-message", ({ roomId, message }) => {
-    console.log(`Chat message in room ${roomId}: ${message}`);
-    io.to(roomId).emit("chat-message", message);
+  socket.on('answer', ({ roomId, answer, to }) => {
+    io.to(to).emit('answer', { answer, from: socket.id });
   });
 
-  socket.on('ice-candidate', ({ roomId, candidate, from }) => {
-    socket.to(roomId).emit('ice-candidate', { candidate, from });
+  socket.on('ice-candidate', ({ roomId, candidate, to }) => {
+    io.to(to).emit('ice-candidate', { candidate, from: socket.id });
   });
 
+  // Chat messages
+  socket.on('chat-message', ({ roomId, message }) => {
+    io.to(roomId).emit('chat-message', message);
+  });
+
+  // Handle disconnects
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
+    // Notify all rooms this user was in
+    const rooms = Array.from(socket.rooms).filter((r) => r !== socket.id);
+    rooms.forEach((roomId) => {
+      socket.to(roomId).emit('user-left', { socketId: socket.id });
+    });
   });
 });
 
