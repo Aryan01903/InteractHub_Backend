@@ -1,5 +1,8 @@
 const mongoose=require('mongoose')
 const videoRoomSchema=new mongoose.Schema({
+    title : {
+        type: String,
+    },
     tenantId : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Tenant',

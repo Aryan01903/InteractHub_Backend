@@ -13,18 +13,19 @@ exports.createAndScheduleRoom = async (req, res) => {
         return res.status(403).json({ message: "Only admins can create" });
     }
 
-    const { tenantId, scheduledAt, emails, durationHours } = req.body; 
+    const { tenantId, scheduledAt, emails, durationHours, title } = req.body; 
     const roomId = uuidv4();
     const isScheduled = scheduledAt && new Date(scheduledAt) > Date.now();
     const startTime = isScheduled ? new Date(scheduledAt) : new Date();
     
     // Creating a new room instance
     const newRoom = new videoRoom({
-        tenantId,
-        roomId,
-        createdBy: req.user._id,
-        scheduledAt: isScheduled ? startTime : null,
-        expiresAt: new Date(startTime.getTime() + 6 * 60 * 60 * 1000)
+      title,
+      tenantId,
+      roomId,
+      createdBy: req.user._id,
+      scheduledAt: isScheduled ? startTime : null,
+      expiresAt: new Date(startTime.getTime() + 6 * 60 * 60 * 1000)
     });
 
     try {
@@ -34,6 +35,7 @@ exports.createAndScheduleRoom = async (req, res) => {
         // If there are emails, send invitations
         if (emails?.length > 0) {
             await sendInvitationEmails(
+                title,              
                 emails,
                 roomId,
                 req.user.name || 'Admin',
@@ -45,6 +47,7 @@ exports.createAndScheduleRoom = async (req, res) => {
 
         // Send response to the client
         res.status(201).json({
+            title,
             message: isScheduled ? "Room scheduled successfully" : "Room created successfully",
             roomId,
             createdBy: req.user._id,
@@ -52,7 +55,7 @@ exports.createAndScheduleRoom = async (req, res) => {
             signalingData: {
                 ice_servers: ICE_SERVERS
             },
-            joinLink: `${process.env.FRONTEND_URL}/video-room/${roomId}`
+            joinLink: `${process.env.FRONTEND_URL}/video-conference/${roomId}`
         });
     } catch (error) {
         console.error(error);
