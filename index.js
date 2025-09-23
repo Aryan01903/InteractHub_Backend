@@ -108,9 +108,9 @@ io.on("connection", (socket) => {
     io.to(to).emit("ice-candidate", { candidate, from: socket.id });
   });
 
-  socket.on("chat-message", ({ roomId, message }) => {
-    console.log(`Received chat message from ${socket.id} in room ${roomId}: ${message}`);
-    io.to(roomId).emit("chat-message", message);
+  socket.on("chat-message", ({ roomId, message, sender }) => {
+    console.log(`Chat message from ${sender} in room ${roomId}: ${message}`);
+    socket.to(roomId).emit("chat-message", { message, sender });
   });
 
   socket.on("disconnect", () => {
