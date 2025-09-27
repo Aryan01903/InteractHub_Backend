@@ -30,6 +30,15 @@ const messageSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+messageSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
 module.exports = mongoose.model("Message", messageSchema);

@@ -1,17 +1,18 @@
-// routes/messageRoutes.js
 const express = require("express");
 const router = express.Router();
 const {
-  sendMessage,
   getMessages,
+  sendMessage,
+  editMessage,
+  deleteMessage,
   markAsRead,
 } = require("../controllers/messageController");
-const authMiddleware = require("../middlewares/authMW");
+const authMW  = require("../middlewares/authMW");
 
-router.post("/", authMiddleware, sendMessage);
-
-router.get("/", authMiddleware, getMessages);
-
-router.put("/:id/read", authMiddleware, markAsRead);
+router.get("/", authMW, getMessages);
+router.post("/", authMW, sendMessage);
+router.put("/:id", authMW, editMessage);
+router.delete("/:id", authMW, deleteMessage);
+router.put("/:id/read", authMW, markAsRead);
 
 module.exports = router;

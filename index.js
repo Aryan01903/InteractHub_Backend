@@ -36,6 +36,7 @@ const authRoutes = require("./routes/authRoutes");
 const whiteboardRoutes = require("./routes/whiteboardRoutes");
 const videoRoutes = require("./routes/videoRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+
 app.use("/api/auth", authRoutes);
 app.use("/api/whiteboard", whiteboardRoutes);
 app.use("/api/videoCall", videoRoutes);
@@ -63,7 +64,7 @@ const io = new Server(server, {
 const Whiteboard = mongoose.model("Whiteboard");
 const Message = require("./models/message.model");
 
-// Socket.IO connection
+// Socket.IO connection with auth
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
@@ -125,13 +126,13 @@ io.on("connection", (socket) => {
     io.to(to).emit("ice-candidate", { candidate, from: socket.id });
   });
 
-  // Live video conference chat 
+  // Live video chat
   socket.on("chat-message", ({ roomId, message }) => {
     console.log(`Received chat message from ${socket.id} in room ${roomId}: ${message}`);
     io.to(roomId).emit("chat-message", message);
   });
 
-  // Tenant-wide chat 
+  // Tenant-wide chat
   const tenantRoom = `tenant:${socket.user.tenantId}`;
   socket.join(tenantRoom);
 
@@ -144,11 +145,33 @@ io.on("connection", (socket) => {
         type,
       });
       await message.save();
-
       const populated = await message.populate("sender", "name email role");
       io.to(tenantRoom).emit("newMessage", populated);
     } catch (err) {
       console.error("Error saving tenant message:", err.message);
+    }
+  });
+
+  socket.on("editMessage", async ({ messageId, newContent }) => {
+    try {
+      const message = await Message.findByIdAndUpdate(
+        messageId,
+        { content: newContent, updatedAt: Date.now() },
+        { new: true }
+      ).populate("sender", "name email role");
+
+      if (message) io.to(tenantRoom).emit("messageEdited", message);
+    } catch (err) {
+      console.error("Error editing message:", err.message);
+    }
+  });
+
+  socket.on("deleteMessage", async ({ messageId }) => {
+    try {
+      await Message.findByIdAndDelete(messageId);
+      io.to(tenantRoom).emit("messageDeleted", { messageId });
+    } catch (err) {
+      console.error("Error deleting message:", err.message);
     }
   });
 
@@ -162,9 +185,7 @@ io.on("connection", (socket) => {
         .populate("sender", "name email role")
         .populate("readBy", "name email role");
 
-      if (message) {
-        io.to(tenantRoom).emit("messageRead", message);
-      }
+      if (message) io.to(tenantRoom).emit("messageRead", message);
     } catch (err) {
       console.error("Error marking message as read:", err.message);
     }
