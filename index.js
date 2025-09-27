@@ -3,6 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const http = require("http");
 const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { startCleanupScheduler } = require("./utils/invitationCleanUp");
 
@@ -34,9 +35,11 @@ app.get("/test-cors", (req, res) => {
 const authRoutes = require("./routes/authRoutes");
 const whiteboardRoutes = require("./routes/whiteboardRoutes");
 const videoRoutes = require("./routes/videoRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 app.use("/api/auth", authRoutes);
 app.use("/api/whiteboard", whiteboardRoutes);
 app.use("/api/videoCall", videoRoutes);
+app.use("/api/messages", messageRoutes);
 
 // Error-handling middleware
 app.use((err, req, res, next) => {
@@ -58,6 +61,20 @@ const io = new Server(server, {
 });
 
 const Whiteboard = mongoose.model("Whiteboard");
+const Message = require("./models/message.model");
+
+// Socket.IO connection
+io.use((socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error("No token provided"));
+    const decoded = jwt.verify(token, process.env.SECRET);
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    next(new Error("Authentication error"));
+  }
+});
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
@@ -108,11 +125,66 @@ io.on("connection", (socket) => {
     io.to(to).emit("ice-candidate", { candidate, from: socket.id });
   });
 
+  // Live video conference chat 
   socket.on("chat-message", ({ roomId, message }) => {
     console.log(`Received chat message from ${socket.id} in room ${roomId}: ${message}`);
     io.to(roomId).emit("chat-message", message);
   });
 
+  // Tenant-wide chat 
+  const tenantRoom = `tenant:${socket.user.tenantId}`;
+  socket.join(tenantRoom);
+
+  socket.on("sendMessage", async ({ content, type = "text" }) => {
+    try {
+      const message = new Message({
+        tenantId: socket.user.tenantId,
+        sender: socket.user._id,
+        content,
+        type,
+      });
+      await message.save();
+
+      const populated = await message.populate("sender", "name email role");
+      io.to(tenantRoom).emit("newMessage", populated);
+    } catch (err) {
+      console.error("Error saving tenant message:", err.message);
+    }
+  });
+
+  socket.on("markAsRead", async (messageId) => {
+    try {
+      const message = await Message.findByIdAndUpdate(
+        messageId,
+        { $addToSet: { readBy: socket.user._id } },
+        { new: true }
+      )
+        .populate("sender", "name email role")
+        .populate("readBy", "name email role");
+
+      if (message) {
+        io.to(tenantRoom).emit("messageRead", message);
+      }
+    } catch (err) {
+      console.error("Error marking message as read:", err.message);
+    }
+  });
+
+  socket.on("typing", () => {
+    socket.to(tenantRoom).emit("userTyping", {
+      userId: socket.user._id,
+      name: socket.user.name,
+    });
+  });
+
+  socket.on("stopTyping", () => {
+    socket.to(tenantRoom).emit("userStopTyping", {
+      userId: socket.user._id,
+      name: socket.user.name,
+    });
+  });
+
+  // Disconnect
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
     const rooms = Array.from(socket.rooms).filter((r) => r !== socket.id);
