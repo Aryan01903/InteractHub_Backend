@@ -14,5 +14,6 @@ router.post("/", authMW, sendMessage);
 router.put("/:id", authMW, editMessage);
 router.delete("/:id", authMW, deleteMessage);
 router.put("/:id/read", authMW, markAsRead);
+router.put("/mark-all-read", authMW, markAllAsRead);
 
 module.exports = router;

@@ -4,7 +4,7 @@ exports.getMessages = async (req, res) => {
   try {
     const messages = await Message.find({ tenantId: req.user.tenantId })
       .populate("sender", "name email role")
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: -1 });
     res.json(messages);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -72,3 +72,27 @@ exports.markAsRead = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.markAllAsRead = async (req, res) => {
+  try {
+    const updateResult = await Message.updateMany(
+      {
+        tenantId: req.user.tenantId,
+        readBy: { $ne: req.user._id }
+      },
+      {
+        $addToSet: { readBy: req.user._id }
+      }
+    );
+
+    io.to(`tenant:${req.user.tenantId}`).emit("messageRead", {
+      userId: req.user._id,
+      tenantId: req.user.tenantId,
+    });
+
+    res.json({ success: true, ...updateResult });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+

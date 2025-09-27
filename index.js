@@ -216,6 +216,8 @@ io.on("connection", (socket) => {
   });
 });
 
+module.exports.io=io;
+
 // MongoDB connection
 mongoose
   .connect(process.env.DB_URL)
