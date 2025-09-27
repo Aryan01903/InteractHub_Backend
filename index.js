@@ -25,6 +25,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
+
 
 // Test endpoint
 app.get("/test-cors", (req, res) => {

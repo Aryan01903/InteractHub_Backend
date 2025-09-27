@@ -13,13 +13,21 @@ const messageSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true,
+    required: false,
   },
   type: {
     type: String,
     enum: ["text", "image", "file"],
     default: "text",
   },
+  files: [
+    {
+      filename: String,
+      path: String,
+      mimetype: String,
+      size: Number,
+    },
+  ],
   readBy: [
     {
       type: mongoose.Schema.Types.ObjectId,

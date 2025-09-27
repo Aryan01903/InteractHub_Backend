@@ -10,20 +10,61 @@ exports.getMessages = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'audio/mpeg', 'application/pdf'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Unsupported file type'), false);
+    }
+  },
+});
 
 exports.sendMessage = async (req, res) => {
   try {
-    const { content, type = "text" } = req.body;
-    const message = new Message({
+    const { content, type = 'text' } = req.body;
+    const files = req.files || [];
+
+    if (!content && files.length === 0) {
+      return res.status(400).json({ error: 'Message content or file is required' });
+    }
+
+    const messageType = files.length > 0 ? (files[0].mimetype.startsWith('image/') ? 'image' : 'file') : type;
+
+    const messageData = {
       tenantId: req.user.tenantId,
       sender: req.user._id,
-      content,
-      type,
-    });
+      content: content || '',
+      type: messageType,
+      files: files.map(file => ({
+        filename: file.filename,
+        path: file.path,
+        mimetype: file.mimetype,
+        size: file.size,
+      })),
+      readBy: [],
+    };
+
+    const message = new Message(messageData);
     await message.save();
-    const populated = await message.populate("sender", "name email role");
+    const populated = await message.populate('sender', 'name email role');
     res.json(populated);
   } catch (err) {
+    console.error('Error in sendMessage:', err);
     res.status(500).json({ error: err.message });
   }
 };
