@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.get("/", authMW, getMessages);
-router.post("/messages", upload.array("file", 5), sendMessage);
+router.post("/", upload.array("file", 5), sendMessage);
 router.put("/:id", authMW, upload.array("file", 5), editMessage);
 router.delete("/:id", authMW, deleteMessage);
 router.put("/:id/read", authMW, markAsRead);
