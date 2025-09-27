@@ -1,3 +1,6 @@
+const multer=require('multer')
+const  fs = require('fs')
+const path = require('path')
 const Message = require("../models/message.model");
 
 exports.getMessages = async (req, res) => {
@@ -10,47 +13,57 @@ exports.getMessages = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-const multer = require('multer');
-const path = require('path');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    const uploadPath = path.join(__dirname, "uploads");
+    try {
+      fs.mkdirSync(uploadPath, { recursive: true });
+      cb(null, uploadPath);
+    } catch (err) {
+      cb(new Error(`Failed to create uploads directory: ${err.message}`));
+    }
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
+
 const upload = multer({
   storage,
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'audio/mpeg', 'application/pdf'];
+    const allowedTypes = ["image/jpeg", "image/png", "audio/mpeg", "application/pdf"];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Unsupported file type'), false);
+      cb(new Error(`Unsupported file type: ${file.mimetype}`), false);
     }
   },
 });
 
+
 exports.sendMessage = async (req, res) => {
   try {
-    const { content, type = 'text' } = req.body;
+    const { content, type = "text" } = req.body;
     const files = req.files || [];
 
     if (!content && files.length === 0) {
-      return res.status(400).json({ error: 'Message content or file is required' });
+      return res.status(400).json({ error: "Message content or file is required" });
     }
 
-    const messageType = files.length > 0 ? (files[0].mimetype.startsWith('image/') ? 'image' : 'file') : type;
+    if (!req.user?._id || !req.user?.tenantId) {
+      return res.status(401).json({ error: "Unauthorized: Invalid user or tenant" });
+    }
+
+    const messageType = files.length > 0 ? (files[0].mimetype.startsWith("image/") ? "image" : "file") : type;
 
     const messageData = {
       tenantId: req.user.tenantId,
       sender: req.user._id,
-      content: content || '',
+      content: content || "",
       type: messageType,
-      files: files.map(file => ({
+      files: files.map((file) => ({
         filename: file.filename,
         path: file.path,
         mimetype: file.mimetype,
@@ -61,13 +74,14 @@ exports.sendMessage = async (req, res) => {
 
     const message = new Message(messageData);
     await message.save();
-    const populated = await message.populate('sender', 'name email role');
+    const populated = await message.populate("sender", "name email role");
     res.json(populated);
   } catch (err) {
-    console.error('Error in sendMessage:', err);
-    res.status(500).json({ error: err.message });
+    console.error("Error in sendMessage:", err.message, err.stack);
+    res.status(500).json({ error: `Internal server error: ${err.message}` });
   }
 };
+
 
 exports.editMessage = async (req, res) => {
   try {

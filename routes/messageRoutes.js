@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
 const path = require("path");
 const {
   getMessages,
@@ -12,6 +11,7 @@ const {
 } = require("../controllers/messageController");
 const authMW = require("../middlewares/authMW");
 
+const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.get("/", authMW, getMessages);
-router.post("/", authMW, upload.array("file", 5), sendMessage);
+router.post("/messages", upload.array("file", 5), sendMessage);
 router.put("/:id", authMW, upload.array("file", 5), editMessage);
 router.delete("/:id", authMW, deleteMessage);
 router.put("/:id/read", authMW, markAsRead);

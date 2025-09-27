@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { startCleanupScheduler } = require("./utils/invitationCleanUp");
+const path = require('path')
 
 const app = express();
 const server = http.createServer(app);
@@ -25,7 +26,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 // Test endpoint

@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
+// Message Schema
 const messageSchema = new mongoose.Schema({
   tenantId: {
     type: mongoose.Schema.Types.ObjectId,
