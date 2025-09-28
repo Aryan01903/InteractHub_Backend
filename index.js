@@ -40,6 +40,8 @@ const whiteboardRoutes = require("./routes/whiteboardRoutes");
 const videoRoutes = require("./routes/videoRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 
+console.log(authRoutes);
+console.log(messageRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/whiteboard", whiteboardRoutes);
 app.use("/api/videoCall", videoRoutes);

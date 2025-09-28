@@ -2,6 +2,7 @@ const multer=require('multer')
 const  fs = require('fs')
 const path = require('path')
 const Message = require("../models/message.model");
+const { io } = require("../index")
 
 exports.getMessages = async (req, res) => {
   try {
