@@ -6,7 +6,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { startCleanupScheduler } = require("./utils/invitationCleanUp");
-const path = require('path')
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -28,29 +28,9 @@ app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-
 // Test endpoint
 app.get("/test-cors", (req, res) => {
   res.json({ ok: true });
-});
-
-// Routes
-const authRoutes = require("./routes/authRoutes");
-const whiteboardRoutes = require("./routes/whiteboardRoutes");
-const videoRoutes = require("./routes/videoRoutes");
-const messageRoutes = require("./routes/messageRoutes");
-
-console.log(authRoutes);
-console.log(messageRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/whiteboard", whiteboardRoutes);
-app.use("/api/videoCall", videoRoutes);
-app.use("/api/messages", messageRoutes);
-
-// Error-handling middleware
-app.use((err, req, res, next) => {
-  console.error("Server error:", err.message);
-  res.status(500).json({ error: "Internal server error" });
 });
 
 // Socket.IO setup
@@ -66,10 +46,7 @@ const io = new Server(server, {
   },
 });
 
-const Whiteboard = mongoose.model("Whiteboard");
-const Message = require("./models/message.model");
-
-// Socket.IO connection with auth
+// Socket.IO authentication middleware
 io.use((socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
@@ -82,6 +59,7 @@ io.use((socket, next) => {
   }
 });
 
+// Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 
@@ -90,6 +68,7 @@ io.on("connection", (socket) => {
     socket.join(boardId);
     console.log(`Client ${socket.id} joined board ${boardId}`);
     try {
+      const Whiteboard = mongoose.model("Whiteboard");
       const whiteboard = await Whiteboard.findById(boardId);
       if (whiteboard && whiteboard.data) {
         socket.emit("initialWhiteboardState", { data: whiteboard.data });
@@ -143,6 +122,7 @@ io.on("connection", (socket) => {
 
   socket.on("sendMessage", async ({ content, type = "text" }) => {
     try {
+      const Message = require("./models/message.model");
       const message = new Message({
         tenantId: socket.user.tenantId,
         sender: socket.user._id,
@@ -159,6 +139,7 @@ io.on("connection", (socket) => {
 
   socket.on("editMessage", async ({ messageId, newContent }) => {
     try {
+      const Message = require("./models/message.model");
       const message = await Message.findByIdAndUpdate(
         messageId,
         { content: newContent, updatedAt: Date.now() },
@@ -173,6 +154,7 @@ io.on("connection", (socket) => {
 
   socket.on("deleteMessage", async ({ messageId }) => {
     try {
+      const Message = require("./models/message.model");
       await Message.findByIdAndDelete(messageId);
       io.to(tenantRoom).emit("messageDeleted", { messageId });
     } catch (err) {
@@ -182,6 +164,7 @@ io.on("connection", (socket) => {
 
   socket.on("markAsRead", async (messageId) => {
     try {
+      const Message = require("./models/message.model");
       const message = await Message.findByIdAndUpdate(
         messageId,
         { $addToSet: { readBy: socket.user._id } },
@@ -210,7 +193,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  // Disconnect
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
     const rooms = Array.from(socket.rooms).filter((r) => r !== socket.id);
@@ -221,14 +203,29 @@ io.on("connection", (socket) => {
   });
 });
 
-module.exports.io=io;
+// Routes
+const authRoutes = require("./routes/authRoutes");
+const whiteboardRoutes = require("./routes/whiteboardRoutes");
+const videoRoutes = require("./routes/videoRoutes");
+const messageRoutes = require("./routes/messageRoutes")(io);
+
+app.use("/api/auth", authRoutes);
+app.use("/api/whiteboard", whiteboardRoutes);
+app.use("/api/videoCall", videoRoutes);
+app.use("/api/messages", messageRoutes);
+
+// Error-handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err.message);
+  res.status(500).json({ error: "Internal server error" });
+});
 
 // MongoDB connection
 mongoose
   .connect(process.env.DB_URL)
   .then(() => {
     console.log("Connected to MongoDB");
-    const port = process.env.PORT || 5000;
+    const port = process.env.PORT;
     server.listen(port, () => {
       console.log(`Server running on port ${port}`);
     });

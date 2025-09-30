@@ -1,23 +1,12 @@
-const multer=require('multer')
-const  fs = require('fs')
-const path = require('path')
+const mongoose = require("mongoose");
 const Message = require("../models/message.model");
-const { io } = require("../index")
-
-exports.getMessages = async (req, res) => {
-  try {
-    const messages = await Message.find({ tenantId: req.user.tenantId })
-      .populate("sender", "name email role")
-      .sort({ createdAt: -1 });
-    res.json(messages);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "uploads");
+    const uploadPath = path.join(__dirname, "../uploads");
     try {
       fs.mkdirSync(uploadPath, { recursive: true });
       cb(null, uploadPath);
@@ -32,7 +21,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = ["image/jpeg", "image/png", "audio/mpeg", "application/pdf"];
     if (allowedTypes.includes(file.mimetype)) {
@@ -43,6 +32,16 @@ const upload = multer({
   },
 });
 
+exports.getMessages = async (req, res) => {
+  try {
+    const messages = await Message.find({ tenantId: req.user.tenantId })
+      .populate("sender", "name email role")
+      .sort({ createdAt: -1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 exports.sendMessage = async (req, res) => {
   try {
@@ -78,11 +77,10 @@ exports.sendMessage = async (req, res) => {
     const populated = await message.populate("sender", "name email role");
     res.json(populated);
   } catch (err) {
-    console.error("Error in sendMessage:", err.message, err.stack);
+    console.error("Error in sendMessage:", err.message, err.stack, err);
     res.status(500).json({ error: `Internal server error: ${err.message}` });
   }
 };
-
 
 exports.editMessage = async (req, res) => {
   try {
@@ -105,7 +103,7 @@ exports.deleteMessage = async (req, res) => {
     const message = await Message.findById(req.params.id);
     if (!message) return res.status(404).json({ error: "Message not found" });
 
-    await message.remove();
+    await Message.findByIdAndDelete(req.params.id);
     res.json({ message: "Message deleted", messageId: req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -129,15 +127,15 @@ exports.markAsRead = async (req, res) => {
   }
 };
 
-exports.markAllAsRead = async (req, res) => {
+exports.markAllAsRead = async (req, res, io) => {
   try {
     const updateResult = await Message.updateMany(
       {
         tenantId: req.user.tenantId,
-        readBy: { $ne: req.user._id }
+        readBy: { $ne: req.user._id },
       },
       {
-        $addToSet: { readBy: req.user._id }
+        $addToSet: { readBy: req.user._id },
       }
     );
 
@@ -152,3 +150,4 @@ exports.markAllAsRead = async (req, res) => {
   }
 };
 
+module.exports.upload = upload;

@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
 const {
   getMessages,
   sendMessage,
@@ -8,28 +7,17 @@ const {
   deleteMessage,
   markAsRead,
   markAllAsRead,
+  upload, // multer middleware
 } = require("../controllers/messageController");
 const authMW = require("../middlewares/authMW");
 
-const multer = require("multer");
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueName + ext);
-  },
-});
-
-const upload = multer({ storage });
-
-router.put("/mark-all-read", authMW, markAllAsRead);
-router.get("/", authMW, getMessages);
-router.post("/", authMW, upload.array("file", 5), sendMessage);
-router.put("/:id", authMW, upload.array("file", 5), editMessage);
-router.delete("/:id", authMW, deleteMessage);
-router.put("/:id/read", authMW, markAsRead);
-
-module.exports = router;
+module.exports = function (io) {
+  router.use(authMW);
+  router.put("/read/all", (req, res) => markAllAsRead(req, res, io));
+  router.get("/", getMessages);
+  router.post("/", upload.array("files", 5), (req, res) => sendMessage(req, res, io));
+  router.put("/:id", editMessage);
+  router.delete("/:id", deleteMessage);
+  router.put("/:id/read", markAsRead);
+  return router;
+};
