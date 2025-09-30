@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const authMW = require("../middlewares/authMW");
 const {
   getMessages,
   sendMessage,
@@ -7,11 +8,10 @@ const {
   deleteMessage,
   markAsRead,
   markAllAsRead,
-  upload, // multer middleware
+  upload,
 } = require("../controllers/messageController");
-const authMW = require("../middlewares/authMW");
 
-module.exports = function (io) {
+module.exports = (io) => {
   router.use(authMW);
   router.put("/read/all", (req, res) => markAllAsRead(req, res, io));
   router.get("/", getMessages);
