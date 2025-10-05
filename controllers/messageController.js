@@ -31,6 +31,8 @@ const sendMessage = async (req, res, io) => {
     const messageType =
       files.length > 0
         ? files[0].mimetype.startsWith("image/")
+      : files.length > 0
+        ? files[0].mimetype.startsWith("image/")
           ? "image"
           : "file"
         : type;
@@ -57,6 +59,7 @@ const sendMessage = async (req, res, io) => {
     res.status(201).json(populated);
   } catch (err) {
     console.error("sendMessage error:", err);
+    res.status(500).json({ error: err.message || "Internal server error" });
     res.status(500).json({ error: err.message || "Internal server error" });
   }
 };
