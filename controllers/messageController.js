@@ -135,10 +135,12 @@ const uploadFiles = async (req, res) => {
           throw new Error(`File ${file.originalname} exceeds 10MB limit`);
         }
 
+        const resourceType = file.mimetype.startsWith("image/") ? "image" : "raw";
+
         const result = await new Promise((resolve, reject) => {
           cloudinary.uploader.upload_stream(
             {
-              resource_type: "auto",
+              resource_type: resourceType,
               folder: `tenant_${req.user.tenantId}`,
             },
             (error, result) => {
