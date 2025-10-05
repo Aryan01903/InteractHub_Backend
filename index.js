@@ -118,73 +118,21 @@ io.on("connection", (socket) => {
   // Tenant-wide chat
   const tenantRoom = `tenant:${socket.user.tenantId}`;
   socket.join(tenantRoom);
-  const cloudinary = require("./utils/cloudinaryConfig");
 
-  socket.on("sendMessage", async ({ content, type = "text", file }) => {
-    try {
-      let uploadedFileUrl = null;
-
-      if (type === "file" && file) {
-        const uploadResponse = await cloudinary.uploader.upload(file, {
-          folder: `interacthub/${socket.user.tenantId}`,
-        });
-        uploadedFileUrl = uploadResponse.secure_url;
-      }
-      const Message = require("./models/message.model");
-      const message = new Message({
-        tenantId: socket.user.tenantId,
-        sender: socket.user._id,
-        content: uploadedFileUrl || content,
-        type,
-      });
-      await message.save();
-      const populated = await message.populate("sender", "name email role");
-      io.to(tenantRoom).emit("newMessage", populated);
-    } catch (err) {
-      console.error("Error saving tenant message:", err.message);
-    }
+  socket.on("newMessage", (message) => {
+    io.to(tenantRoom).emit("newMessage", message);
   });
 
-  socket.on("editMessage", async ({ messageId, newContent }) => {
-    try {
-      const Message = require("./models/message.model");
-      const message = await Message.findByIdAndUpdate(
-        messageId,
-        { content: newContent, updatedAt: Date.now() },
-        { new: true }
-      ).populate("sender", "name email role");
-
-      if (message) io.to(tenantRoom).emit("messageEdited", message);
-    } catch (err) {
-      console.error("Error editing message:", err.message);
-    }
+  socket.on("messageEdited", (message) => {
+    io.to(tenantRoom).emit("messageEdited", message);
   });
 
-  socket.on("deleteMessage", async ({ messageId }) => {
-    try {
-      const Message = require("./models/message.model");
-      await Message.findByIdAndDelete(messageId);
-      io.to(tenantRoom).emit("messageDeleted", { messageId });
-    } catch (err) {
-      console.error("Error deleting message:", err.message);
-    }
+  socket.on("messageDeleted", ({ messageId }) => {
+    io.to(tenantRoom).emit("messageDeleted", { messageId });
   });
 
-  socket.on("markAsRead", async (messageId) => {
-    try {
-      const Message = require("./models/message.model");
-      const message = await Message.findByIdAndUpdate(
-        messageId,
-        { $addToSet: { readBy: socket.user._id } },
-        { new: true }
-      )
-        .populate("sender", "name email role")
-        .populate("readBy", "name email role");
-
-      if (message) io.to(tenantRoom).emit("messageRead", message);
-    } catch (err) {
-      console.error("Error marking message as read:", err.message);
-    }
+  socket.on("messageRead", (message) => {
+    io.to(tenantRoom).emit("messageRead", message);
   });
 
   socket.on("typing", () => {
@@ -197,7 +145,6 @@ io.on("connection", (socket) => {
   socket.on("stopTyping", () => {
     socket.to(tenantRoom).emit("userStopTyping", {
       userId: socket.user._id,
-      name: socket.user.name,
     });
   });
 
