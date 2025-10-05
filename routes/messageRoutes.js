@@ -13,9 +13,9 @@ const {
 
 module.exports = (io) => {
   router.use(authMW);
-  router.put("/read/all", (req, res) => markAllAsRead(req, res, io));
   router.get("/", getMessages);
   router.post("/", upload.array("files", 5), (req, res) => sendMessage(req, res, io));
+  router.put("/read/all", (req, res) => markAllAsRead(req, res, io));
   router.put("/:id", editMessage);
   router.delete("/:id", deleteMessage);
   router.put("/:id/read", markAsRead);

@@ -26,7 +26,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Test endpoint
 app.get("/test-cors", (req, res) => {
@@ -119,14 +118,23 @@ io.on("connection", (socket) => {
   // Tenant-wide chat
   const tenantRoom = `tenant:${socket.user.tenantId}`;
   socket.join(tenantRoom);
+  const cloudinary = require("./config/cloudinary");
 
-  socket.on("sendMessage", async ({ content, type = "text" }) => {
+  socket.on("sendMessage", async ({ content, type = "text", file }) => {
     try {
+      let uploadedFileUrl = null;
+
+      if (type === "file" && file) {
+        const uploadResponse = await cloudinary.uploader.upload(file, {
+          folder: `interacthub/${socket.user.tenantId}`,
+        });
+        uploadedFileUrl = uploadResponse.secure_url;
+      }
       const Message = require("./models/message.model");
       const message = new Message({
         tenantId: socket.user.tenantId,
         sender: socket.user._id,
-        content,
+        content: uploadedFileUrl || content,
         type,
       });
       await message.save();
