@@ -15,7 +15,7 @@ const getMessages = async (req, res) => {
 
 const sendMessage = async (req, res, io) => {
   try {
-    const { content, type = "text", files = [] } = req.body;
+    const { content = "", files = [] } = req.body;
 
     if (!content && files.length === 0) {
       return res.status(400).json({ error: "Message content or file is required" });
@@ -28,14 +28,11 @@ const sendMessage = async (req, res, io) => {
       }
     });
 
-    const messageType =
-      files.length > 0
-        ? files[0].mimetype.startsWith("image/")
-      : files.length > 0
-        ? files[0].mimetype.startsWith("image/")
-          ? "image"
-          : "file"
-        : type;
+    const messageType = files.length > 0
+      ? files[0].mimetype.startsWith("image/")
+        ? "image"
+        : "file"
+      : "text";
 
     const messageData = {
       tenantId: req.user.tenantId,

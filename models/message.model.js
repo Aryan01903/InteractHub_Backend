@@ -1,20 +1,8 @@
-const mongoose = require("mongoose");
-
+const mongoose = require('mongoose');
 const messageSchema = new mongoose.Schema({
-  tenantId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Tenant",
-    required: true,
-  },
-  sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  content: {
-    type: String,
-    required: false,
-  },
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant", required: true },
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  content: { type: String, default: "" },
   type: {
     type: String,
     enum: ["text", "image", "file"],
@@ -22,31 +10,15 @@ const messageSchema = new mongoose.Schema({
   },
   files: [
     {
-      public_id: String,
-      secure_url: String,
-      mimetype: String,
-      original_filename: String,
+      public_id: { type: String },
+      secure_url: { type: String },
+      mimetype: { type: String },
+      original_filename: { type: String },
     },
   ],
-  readBy: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-messageSchema.pre("save", function (next) {
-  this.updatedAt = Date.now();
-  next();
+  readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("Message", messageSchema);
