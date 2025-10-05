@@ -118,7 +118,7 @@ io.on("connection", (socket) => {
   // Tenant-wide chat
   const tenantRoom = `tenant:${socket.user.tenantId}`;
   socket.join(tenantRoom);
-  const cloudinary = require("./config/cloudinary");
+  const cloudinary = require("./utils/cloudinary");
 
   socket.on("sendMessage", async ({ content, type = "text", file }) => {
     try {
