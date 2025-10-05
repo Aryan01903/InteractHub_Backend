@@ -1,9 +1,5 @@
 const mongoose = require("mongoose");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 
-// Message Schema
 const messageSchema = new mongoose.Schema({
   tenantId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -26,10 +22,10 @@ const messageSchema = new mongoose.Schema({
   },
   files: [
     {
-      filename: String,
-      path: String,
+      public_id: String,
+      secure_url: String,
       mimetype: String,
-      size: Number,
+      original_filename: String,
     },
   ],
   readBy: [
