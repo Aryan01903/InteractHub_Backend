@@ -2,24 +2,19 @@ const Invite = require('../models/invite');
 const cron=require('node-cron')
 async function cleanupExpiredInvites() {
   try {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-    // Delete invites where expiresAt is older than 7 days ago
     const result = await Invite.deleteMany({
-      expiresAt: { $lt: sevenDaysAgo }
+      expiresAt: { $lt: new Date() }
     });
-
-    console.log(`Cleanup expired invites: Deleted ${result.deletedCount} invites`);
+    console.log(`Cleanup: Deleted ${result.deletedCount} expired invites`);
   } catch (error) {
     console.error('Error cleaning up expired invites:', error);
   }
 }
 
 function startCleanupScheduler() {
-  // Run once daily at midnight
-  cron.schedule('0 0 * * *', () => {
+  cron.schedule('0 0 * * *', async () => {
     console.log('Running daily cleanup job for expired invites...');
-    cleanupExpiredInvites();
+    await cleanupExpiredInvites();
   });
 }
 
