@@ -51,8 +51,8 @@ const sendInviteEmail = async ( email, token, tenantId, tenantName ) => {
                     
                     <tr>
                       <td style="background: linear-gradient(135deg, #3AABB7 0%, #2e8992 100%); padding: 36px 40px; text-align:center;">
-                        <h1 style="margin:0; color:#ffffff; font-size:26px; letter-spacing:1px;">InteractHub</h1>
-                        <p style="margin:8px 0 0; color:#d0f0f3; font-size:14px;">Seamless Collaboration & Management</p>
+                        <h1 style="margin:0; color:#000000; font-size:26px; letter-spacing:1px;">InteractHub</h1>
+                        <p style="margin:8px 0 0; color:#d0f4f8; font-size:14px;">Seamless Collaboration & Management</p>
                       </td>
                     </tr>
  
@@ -76,8 +76,8 @@ const sendInviteEmail = async ( email, token, tenantId, tenantName ) => {
  
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td align="center" style="padding-bottom:28px;">
-                              <a href="${link}" style="display:inline-block; background: linear-gradient(135deg, #3AABB7, #2e8992); color:#ffffff; text-decoration:none; font-size:15px; font-weight:bold; padding:14px 36px; border-radius:50px; letter-spacing:0.5px;">
+                            <td align="center" style="padding-bottom:28px; background-color:#3AABB7;">
+                              <a href="${link}" style="display:inline-block; background:linear-gradient(135deg, #3AABB7, #2e8992); color:#ffffff; text-decoration:none; font-size:15px; font-weight:bold; padding:14px 36px; border-radius:50px; letter-spacing:0.5px;">
                                 Accept Invitation →
                               </a>
                             </td>

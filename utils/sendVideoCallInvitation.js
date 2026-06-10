@@ -93,7 +93,7 @@ module.exports = async function sendInvitationEmails(emails, roomId, senderName,
                           <table width="100%" cellpadding="0" cellspacing="0">
                             <tr>
                               <td align="center" style="padding-bottom:28px;">
-                                <a href="${inviteLink}" style="display:inline-block; background: linear-gradient(135deg, #3AABB7, #2e8992); color:#ffffff; text-decoration:none; font-size:15px; font-weight:bold; padding:14px 36px; border-radius:50px; letter-spacing:0.5px;">
+                                <a href="${inviteLink}" style="display:inline-block; background:linear-gradient(135deg, #3AABB7, #2e8992); color:#ffffff; text-decoration:none; font-size:15px; font-weight:bold; padding:14px 36px; border-radius:50px; letter-spacing:0.5px;">
                                   Join Video Call →
                                 </a>
                               </td>

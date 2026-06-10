@@ -33,7 +33,9 @@ const verifyTransporter = async () => {
 };
 verifyTransporter();
 
-const sendOtp = async ({ email, otp }) => {
+const sendOtp = async ( email, otp ) => {
+  console.log("Email:", email);
+  console.log("OTP:", otp);
   try {
     const info = await transporter.sendMail({
       from: `"InteractHub" <${process.env.MAIL_USER}>`,

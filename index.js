@@ -158,7 +158,6 @@ io.on("connection", (socket) => {
   });
 });
 
-// Routes
 const authRoutes = require("./routes/authRoutes");
 const whiteboardRoutes = require("./routes/whiteboardRoutes");
 const videoRoutes = require("./routes/videoRoutes");
@@ -169,13 +168,11 @@ app.use("/api/whiteboard", whiteboardRoutes);
 app.use("/api/videoCall", videoRoutes);
 app.use("/api/messages", messageRoutes);
 
-// Error-handling middleware
 app.use((err, req, res, next) => {
   console.error("Server error:", err.message);
   res.status(500).json({ error: "Internal server error" });
 });
 
-// MongoDB connection
 mongoose
   .connect(process.env.DB_URL)
   .then(() => {
