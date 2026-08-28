@@ -1,3 +1,10 @@
-.env
-node_modules
+# node_modules
 dist
+.env
+.env.local
+*.log
+
+# mongodb-memory-server downloads a mongod binary here for the test scripts
+.cache
+.backup/
+.tmp/
