@@ -1,26 +1,52 @@
 import nodemailer, { type Transporter } from "nodemailer";
-import { env } from "../config/env";
+import { env, isTest } from "../config/env";
 import { logger } from "./logger";
 
+const SEND_TIMEOUT_MS = 8_000;
+
 let cached: Transporter | null = null;
+
+function credentials() {
+  if (env.BREVO_MAIL && env.BREVO_SMTP_KEY) {
+    return {
+      host: "smtp-relay.brevo.com",
+      port: 587,
+      user: env.BREVO_MAIL,
+      pass: env.BREVO_SMTP_KEY,
+    };
+  }
+
+  if (env.SMTP_HOST && env.MAIL_USER && env.MAIL_PASS) {
+    return {
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT ?? 587,
+      user: env.MAIL_USER,
+      pass: env.MAIL_PASS,
+    };
+  }
+
+  return null;
+}
 
 function transport(): Transporter | null {
   if (cached) return cached;
 
-  const host = env.SMTP_HOST ?? "smtp-relay.brevo.com";
-  const port = env.SMTP_PORT ?? 587;
-  const user = env.BREVO_MAIL ?? env.MAIL_USER;
-  const pass = env.BREVO_SMTP_KEY ?? env.MAIL_PASS;
+  const config = credentials();
+  if (!config) return null;
 
-  if (!user || !pass) {
-    return null;
-  }
+  const { host, port, user, pass } = config;
 
   cached = nodemailer.createTransport({
     host,
     port,
     secure: port === 465,
     auth: { user, pass },
+    pool: true,
+    maxConnections: 3,
+    maxMessages: 100,
+    connectionTimeout: SEND_TIMEOUT_MS,
+    greetingTimeout: SEND_TIMEOUT_MS,
+    socketTimeout: SEND_TIMEOUT_MS,
   });
 
   return cached;
@@ -33,10 +59,81 @@ export interface MailInput {
   text?: string;
 }
 
-export async function sendMail(input: MailInput): Promise<boolean> {
-  const mailer = transport();
+const recipients = (to: string | string[]) => (Array.isArray(to) ? to : [to]);
 
-  if (!mailer) {
+async function sendViaBrevoApi(input: MailInput): Promise<boolean> {
+  if (!env.BREVO_API_KEY || !env.BREVO_SENDER) return false;
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": env.BREVO_API_KEY,
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: { email: env.BREVO_SENDER, name: env.BREVO_SENDER_NAME },
+      to: recipients(input.to).map((email) => ({ email })),
+      subject: input.subject,
+      htmlContent: input.html,
+      textContent: input.text ?? stripTags(input.html),
+    }),
+    signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`brevo ${response.status}: ${detail.slice(0, 200)}`);
+  }
+
+  return true;
+}
+
+async function sendViaSmtp(input: MailInput): Promise<void> {
+  const mailer = transport();
+  if (!mailer) throw new Error("smtp is not configured");
+
+  await mailer.sendMail({
+    from: env.BREVO_SENDER
+      ? `${env.BREVO_SENDER_NAME} <${env.BREVO_SENDER}>`
+      : env.MAIL_FROM,
+    to: recipients(input.to).join(","),
+    subject: input.subject,
+    html: input.html,
+    text: input.text ?? stripTags(input.html),
+  });
+}
+
+export async function sendMail(input: MailInput): Promise<boolean> {
+  if (isTest) {
+    logger.debug({ to: input.to, subject: input.subject }, "email suppressed in tests");
+    return true;
+  }
+
+  const started = Date.now();
+  const canUseApi = Boolean(env.BREVO_API_KEY && env.BREVO_SENDER);
+
+  if (credentials()) {
+    try {
+      await sendViaSmtp(input);
+      logger.info(
+        { to: input.to, subject: input.subject, ms: Date.now() - started, via: "smtp" },
+        "email sent",
+      );
+      return true;
+    } catch (error) {
+      cached = null;
+      logger[canUseApi ? "warn" : "error"](
+        { err: error, to: input.to, subject: input.subject },
+        canUseApi
+          ? "smtp send failed - falling back to the brevo api"
+          : "failed to send email",
+      );
+      if (!canUseApi) return false;
+    }
+  }
+
+  if (!canUseApi) {
     logger.warn(
       { to: input.to, subject: input.subject },
       "mail not configured - email was not sent",
@@ -45,13 +142,11 @@ export async function sendMail(input: MailInput): Promise<boolean> {
   }
 
   try {
-    await mailer.sendMail({
-      from: env.MAIL_FROM,
-      to: Array.isArray(input.to) ? input.to.join(",") : input.to,
-      subject: input.subject,
-      html: input.html,
-      text: input.text ?? stripTags(input.html),
-    });
+    await sendViaBrevoApi(input);
+    logger.info(
+      { to: input.to, subject: input.subject, ms: Date.now() - started, via: "brevo-api" },
+      "email sent",
+    );
     return true;
   } catch (error) {
     logger.error(

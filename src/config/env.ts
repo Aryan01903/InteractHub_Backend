@@ -30,6 +30,9 @@ const envSchema = z.object({
   MAIL_PASS: z.string().optional(),
   BREVO_MAIL: z.string().optional(),
   BREVO_SMTP_KEY: z.string().optional(),
+  BREVO_API_KEY: z.string().optional(),
+  BREVO_SENDER: z.string().email().optional(),
+  BREVO_SENDER_NAME: z.string().default("InteractHub"),
   MAIL_FROM: z.string().default("InteractHub <onboarding@resend.dev>"),
 
   CLOUDINARY_NAME: z.string().optional(),
@@ -67,7 +70,10 @@ export const isProduction = env.NODE_ENV === "production";
 export const isTest = env.NODE_ENV === "test";
 
 export const mailEnabled = Boolean(
-  env.RESEND_API_KEY || (env.SMTP_HOST && env.MAIL_USER && env.MAIL_PASS),
+  (env.BREVO_API_KEY && env.BREVO_SENDER) ||
+    env.RESEND_API_KEY ||
+    (env.SMTP_HOST && env.MAIL_USER && env.MAIL_PASS) ||
+    (env.BREVO_MAIL && env.BREVO_SMTP_KEY),
 );
 
 export const cloudinaryEnabled = Boolean(
